@@ -201,7 +201,8 @@ class TestTeleBot:
     def test_send_audio_dis_noti(self):
         file_data = open('./test_data/record.mp3', 'rb')
         tb = telebot.TeleBot(TOKEN)
-        ret_msg = tb.send_audio(CHAT_ID, file_data, 1, performer='eternnoir', title='pyTelegram', disable_notification=True)
+        ret_msg = tb.send_audio(CHAT_ID, file_data, 1, performer='eternnoir', title='pyTelegram',
+                                disable_notification=True)
         assert ret_msg.content_type == 'audio'
         assert ret_msg.audio.performer == 'eternnoir'
         assert ret_msg.audio.title == 'pyTelegram'
@@ -389,7 +390,7 @@ class TestTeleBot:
 
     def create_text_message(self, text):
         params = {'text': text}
-        chat = types.User(11, 'test')
+        chat = types.User(11, False, 'test')
         return types.Message(1, None, None, chat, 'text', params)
 
     def test_is_string_unicode(self):
