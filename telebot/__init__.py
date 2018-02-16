@@ -486,7 +486,7 @@ class TeleBot:
         return apihelper.delete_message(self.token, chat_id, message_id)
 
     def send_photo(self, chat_id, photo, caption=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None):
+                   disable_notification=None, **kwargs):
         """
         Use this method to send photos.
         :param disable_notification:
@@ -499,11 +499,10 @@ class TeleBot:
         """
         return types.Message.de_json(
             apihelper.send_photo(self.token, chat_id, photo, caption, reply_to_message_id, reply_markup,
-                                 disable_notification))
+                                 disable_notification, **kwargs))
 
     def send_audio(self, chat_id, audio, caption=None, duration=None, performer=None, title=None,
-                   reply_to_message_id=None,
-                   reply_markup=None, disable_notification=None, timeout=None):
+                   reply_to_message_id=None, reply_markup=None, disable_notification=None, timeout=None, **kwargs):
         """
         Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .mp3 format.
         :param chat_id:Unique identifier for the message recipient
@@ -517,10 +516,10 @@ class TeleBot:
         """
         return types.Message.de_json(
             apihelper.send_audio(self.token, chat_id, audio, caption, duration, performer, title, reply_to_message_id,
-                                 reply_markup, disable_notification, timeout))
+                                 reply_markup, disable_notification, timeout, **kwargs))
 
     def send_voice(self, chat_id, voice, caption=None, duration=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, timeout=None):
+                   disable_notification=None, timeout=None, **kwargs):
         """
         Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message.
         :param chat_id:Unique identifier for the message recipient.
@@ -532,10 +531,10 @@ class TeleBot:
         """
         return types.Message.de_json(
             apihelper.send_voice(self.token, chat_id, voice, caption, duration, reply_to_message_id, reply_markup,
-                                 disable_notification, timeout))
+                                 disable_notification, timeout, **kwargs))
 
     def send_document(self, chat_id, data, reply_to_message_id=None, caption=None, reply_markup=None,
-                      disable_notification=None, timeout=None):
+                      disable_notification=None, timeout=None, **kwargs):
         """
         Use this method to send general files.
         :param chat_id:
@@ -546,7 +545,7 @@ class TeleBot:
         """
         return types.Message.de_json(
             apihelper.send_data(self.token, chat_id, data, 'document', reply_to_message_id, reply_markup,
-                                disable_notification, timeout, caption=caption))
+                                disable_notification, timeout, caption=caption, **kwargs))
 
     def send_sticker(self, chat_id, data, reply_to_message_id=None, reply_markup=None, disable_notification=None,
                      timeout=None):
@@ -563,7 +562,7 @@ class TeleBot:
                                 disable_notification, timeout))
 
     def send_video(self, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, timeout=None):
+                   disable_notification=None, timeout=None, **kwargs):
         """
         Use this method to send video files, Telegram clients support mp4 videos.
         :param chat_id: Integer : Unique identifier for the message recipient — User or GroupChat id
@@ -576,7 +575,7 @@ class TeleBot:
         """
         return types.Message.de_json(
             apihelper.send_video(self.token, chat_id, data, duration, caption, reply_to_message_id, reply_markup,
-                                 disable_notification, timeout))
+                                 disable_notification, timeout, **kwargs))
 
     def send_video_note(self, chat_id, data, duration=None, length=None, reply_to_message_id=None, reply_markup=None,
                         disable_notification=None, timeout=None):
