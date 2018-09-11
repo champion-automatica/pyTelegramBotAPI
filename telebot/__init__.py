@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import threading
-import time
+import logging
 import re
 import sys
-import six
+import threading
+import time
 
-import logging
+import six
 
 logger = logging.getLogger('TeleBot')
 formatter = logging.Formatter(
@@ -39,6 +39,7 @@ class TeleBot:
         sendDocument
         sendSticker
         sendVideo
+        sendAnimation
         sendVideoNote
         sendLocation
         sendChatAction
@@ -576,6 +577,23 @@ class TeleBot:
         return types.Message.de_json(
             apihelper.send_video(self.token, chat_id, data, duration, caption, reply_to_message_id, reply_markup,
                                  disable_notification, timeout, **kwargs))
+
+    def send_animation(self, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
+                   disable_notification=None, timeout=None, **kwargs):
+        """
+        Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound).
+        :param chat_id: Integer : Unique identifier for the message recipient — User or GroupChat id
+        :param data: InputFile or String : Animation to send. You can either pass a file_id as String to resend a
+        animation that is already on the Telegram server
+        :param duration: Integer : Duration of sent animation in seconds
+        :param caption: String : Animation caption (may also be used when resending animation by file_id).
+        :param reply_to_message_id:
+        :param reply_markup:
+        :return:
+        """
+        return types.Message.de_json(
+            apihelper.send_animation(self.token, chat_id, data, duration, caption, reply_to_message_id, reply_markup,
+                                 disable_notification, timeout))
 
     def send_video_note(self, chat_id, data, duration=None, length=None, reply_to_message_id=None, reply_markup=None,
                         disable_notification=None, timeout=None):
@@ -1350,6 +1368,10 @@ class AsyncTeleBot(TeleBot):
     @util.async()
     def send_video(self, *args, **kwargs):
         return TeleBot.send_video(self, *args, **kwargs)
+
+    @util.async()
+    def send_animation(self, *args, **kwargs):
+        return TeleBot.send_animation(self, *args, **kwargs)
 
     @util.async()
     def send_video_note(self, *args, **kwargs):
