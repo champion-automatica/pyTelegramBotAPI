@@ -48,8 +48,8 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
     if files and format_header_param:
         fields.format_header_param = _no_encode(format_header_param)
     if params:
-        if 'timeout' in params: read_timeout = params['timeout'] + 10
-        if 'connect-timeout' in params: connect_timeout = params['connect-timeout'] + 10
+        if 'timeout' in params: read_timeout = params['timeout']
+        if 'connect-timeout' in params: connect_timeout = params['connect-timeout']
     result = _get_req_session().request(method, request_url, params=params, files=files,
                                         timeout=(connect_timeout, read_timeout), proxies=proxy)
     logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
@@ -98,9 +98,14 @@ def get_file(token, file_id):
     return _make_request(token, method_url, params={'file_id': file_id})
 
 
-def download_file(token, file_path):
+def download_file(token, file_path, params=None):
+    read_timeout = READ_TIMEOUT
+    connect_timeout = CONNECT_TIMEOUT
+    if params:
+        if 'timeout' in params: read_timeout = params['timeout']
+        if 'connect-timeout' in params: connect_timeout = params['connect-timeout']
     url = FILE_URL.format(token, file_path)
-    result = _get_req_session().get(url)
+    result = _get_req_session().get(url, params=params, timeout=(connect_timeout, read_timeout), proxies=proxy)
     if result.status_code != 200:
         msg = 'The server returned HTTP {0} {1}. Response body:\n[{2}]' \
             .format(result.status_code, result.reason, result.text)
@@ -752,7 +757,7 @@ def send_invoice(token, chat_id, title, description, invoice_payload, provider_t
     :param disable_notification: Sends the message silently. Users will receive a notification with no sound.
     :param reply_to_message_id: If the message is a reply, ID of the original message
     :param reply_markup: A JSON-serialized object for an inline keyboard. If empty, one 'Pay total price' button will be shown. If not empty, the first button must be a Pay button
-    :return: 
+    :return:
     """
     method_url = r'sendInvoice'
     payload = {'chat_id': chat_id, 'title': title, 'description': description, 'payload': invoice_payload,
@@ -793,7 +798,7 @@ def answer_shipping_query(token, shipping_query_id, ok, shipping_options=None, e
     :param ok: Specify True if delivery to the specified address is possible and False if there are any problems (for example, if delivery to the specified address is not possible)
     :param shipping_options: Required if ok is True. A JSON-serialized array of available shipping options.
     :param error_message: Required if ok is False. Error message in human readable form that explains why it is impossible to complete the order (e.g. "Sorry, delivery to your desired address is unavailable'). Telegram will display this message to the user.
-    :return: 
+    :return:
     """
     method_url = 'answerShippingQuery'
     payload = {'shipping_query_id': shipping_query_id, 'ok': ok}
@@ -811,7 +816,7 @@ def answer_pre_checkout_query(token, pre_checkout_query_id, ok, error_message=No
     :param pre_checkout_query_id: Unique identifier for the query to be answered
     :param ok: Specify True if everything is alright (goods are available, etc.) and the bot is ready to proceed with the order. Use False if there are any problems.
     :param error_message: Required if ok is False. Error message in human readable form that explains the reason for failure to proceed with the checkout (e.g. "Sorry, somebody just bought the last of our amazing black T-shirts while you were busy filling out your payment details. Please choose a different color or garment!"). Telegram will display this message to the user.
-    :return: 
+    :return:
     """
     method_url = 'answerPreCheckoutQuery'
     payload = {'pre_checkout_query_id': pre_checkout_query_id, 'ok': ok}
