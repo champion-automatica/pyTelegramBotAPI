@@ -139,13 +139,13 @@ class TeleBot:
         :return: total updates skipped
         """
         total = 0
-        updates = self.get_updates(offset=self.last_update_id, timeout=1)
+        updates = self.get_updates(offset=self.last_update_id, timeout=apihelper.READ_TIMEOUT)
         while updates:
             total += len(updates)
             for update in updates:
                 if update.update_id > self.last_update_id:
                     self.last_update_id = update.update_id
-            updates = self.get_updates(offset=self.last_update_id + 1, timeout=1)
+            updates = self.get_updates(offset=self.last_update_id + 1, timeout=apihelper.READ_TIMEOUT)
         return total
 
     def __retrieve_updates(self, timeout=20):
@@ -479,7 +479,7 @@ class TeleBot:
 
     def delete_message(self, chat_id, message_id):
         """
-        Use this method to delete message. Returns True on success. 
+        Use this method to delete message. Returns True on success.
         :param chat_id: in which chat to delete
         :param message_id: which message to delete
         :return: API reply.
@@ -1071,7 +1071,7 @@ class TeleBot:
             self.pre_message_subscribers_next_step[chat_id].append(callback)
         else:
             self.pre_message_subscribers_next_step[chat_id] = [callback]
-            
+
     def clear_step_handler(self, message):
         """
         Clears all callback functions registered by register_next_step_handler().
