@@ -31,7 +31,7 @@ def _get_req_session():
     return util.per_thread('req_session', lambda: requests.session())
 
 
-def _make_request(token, method_name, method='get', params=None, files=None, base_url=API_URL):
+def _make_request(token, method_name, method='get', params=None, files=None, base_url=None):
     """
     Makes a request to the Telegram API.
     :param token: The bot's API token. (Created with @BotFather)
@@ -41,6 +41,7 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
     :param files: Optional files.
     :return: The result parsed to a JSON dictionary.
     """
+    base_url = base_url or API_URL
     request_url = base_url.format(token, method_name)
     logger.debug("Request: method={0} url={1} params={2} files={3}".format(method, request_url, params, files))
     read_timeout = READ_TIMEOUT
@@ -88,17 +89,20 @@ def _check_result(method_name, result):
     return result_json
 
 
-def get_me(token):
+def get_me(token, base_url=None):
     method_url = r'getMe'
-    return _make_request(token, method_url)
+    return _make_request(token, method_url, base_url=base_url)
 
 
-def get_file(token, file_id):
+def get_file(token, file_id, base_url=None):
     method_url = r'getFile'
-    return _make_request(token, method_url, params={'file_id': file_id})
+    return _make_request(token, method_url, params={'file_id': file_id}, base_url=base_url)
 
 
 def download_file(token, file_path, params=None):
+    if file_path.startswith('/'):
+        # локальный бот -- локальный файл
+        return open(file_path, 'rb').read()
     read_timeout = READ_TIMEOUT
     connect_timeout = CONNECT_TIMEOUT
     if params:
@@ -114,7 +118,7 @@ def download_file(token, file_path, params=None):
 
 
 def send_message(token, chat_id, text, disable_web_page_preview=None, reply_to_message_id=None, reply_markup=None,
-                 parse_mode=None, disable_notification=None):
+                 parse_mode=None, disable_notification=None, base_url=None):
     """
     Use this method to send text messages. On success, the sent Message is returned.
     :param token:
@@ -137,10 +141,10 @@ def send_message(token, chat_id, text, disable_web_page_preview=None, reply_to_m
         payload['parse_mode'] = parse_mode
     if disable_notification:
         payload['disable_notification'] = disable_notification
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def set_webhook(token, url=None, certificate=None, max_connections=None, allowed_updates=None):
+def set_webhook(token, url=None, certificate=None, max_connections=None, allowed_updates=None, base_url=None):
     method_url = r'setWebhook'
     payload = {
         'url': url if url else "",
@@ -152,21 +156,31 @@ def set_webhook(token, url=None, certificate=None, max_connections=None, allowed
         payload['max_connections'] = max_connections
     if allowed_updates:
         payload['allowed_updates'] = json.dumps(allowed_updates)
-    return _make_request(token, method_url, params=payload, files=files)
+    return _make_request(token, method_url, params=payload, files=files, base_url=base_url)
 
 
-def delete_webhook(token):
+def delete_webhook(token, base_url=None):
     method_url = r'deleteWebhook'
-    return _make_request(token, method_url)
+    return _make_request(token, method_url, base_url=base_url)
 
 
-def get_webhook_info(token):
+def get_webhook_info(token, base_url=None):
     method_url = r'getWebhookInfo'
     payload = {}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_updates(token, offset=None, limit=None, timeout=None, allowed_updates=None):
+def log_out(token, base_url=None):
+    method_url = r'logOut'
+    return _make_request(token, method_url, base_url=base_url)
+
+
+def close(token, base_url=None):
+    method_url = r'close'
+    return _make_request(token, method_url, base_url=base_url)
+
+
+def get_updates(token, offset=None, limit=None, timeout=None, allowed_updates=None, base_url=None):
     method_url = r'getUpdates'
     payload = {}
     if offset:
@@ -177,71 +191,71 @@ def get_updates(token, offset=None, limit=None, timeout=None, allowed_updates=No
         payload['timeout'] = timeout
     if allowed_updates:
         payload['allowed_updates'] = json.dumps(allowed_updates)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_user_profile_photos(token, user_id, offset=None, limit=None):
+def get_user_profile_photos(token, user_id, offset=None, limit=None, base_url=None):
     method_url = r'getUserProfilePhotos'
     payload = {'user_id': user_id}
     if offset:
         payload['offset'] = offset
     if limit:
         payload['limit'] = limit
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_chat(token, chat_id):
+def get_chat(token, chat_id, base_url=None):
     method_url = r'getChat'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def leave_chat(token, chat_id):
+def leave_chat(token, chat_id, base_url=None):
     method_url = r'leaveChat'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_chat_administrators(token, chat_id):
+def get_chat_administrators(token, chat_id, base_url=None):
     method_url = r'getChatAdministrators'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_chat_members_count(token, chat_id):
+def get_chat_members_count(token, chat_id, base_url=None):
     method_url = r'getChatMembersCount'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def set_chat_sticker_set(token, chat_id, sticker_set_name):
+def set_chat_sticker_set(token, chat_id, sticker_set_name, base_url=None):
     method_url = r'setChatStickerSet'
     payload = {'chat_id': chat_id, 'sticker_set_name': sticker_set_name}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def delete_chat_sticker_set(token, chat_id):
+def delete_chat_sticker_set(token, chat_id, base_url=None):
     method_url = r'deleteChatStickerSet'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def get_chat_member(token, chat_id, user_id):
+def get_chat_member(token, chat_id, user_id, base_url=None):
     method_url = r'getChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def forward_message(token, chat_id, from_chat_id, message_id, disable_notification=None):
+def forward_message(token, chat_id, from_chat_id, message_id, disable_notification=None, base_url=None):
     method_url = r'forwardMessage'
     payload = {'chat_id': chat_id, 'from_chat_id': from_chat_id, 'message_id': message_id}
     if disable_notification:
         payload['disable_notification'] = disable_notification
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def send_photo(token, chat_id, photo, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, **kwargs):
+               disable_notification=None, base_url=None, **kwargs):
     method_url = r'sendPhoto'
     payload = {'chat_id': chat_id}
     files = None
@@ -258,11 +272,11 @@ def send_photo(token, chat_id, photo, caption=None, reply_to_message_id=None, re
     if disable_notification:
         payload['disable_notification'] = disable_notification
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_location(token, chat_id, latitude, longitude, live_period=None, reply_to_message_id=None, reply_markup=None,
-                  disable_notification=None):
+                  disable_notification=None, base_url=None):
     method_url = r'sendLocation'
     payload = {'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude}
     if live_period:
@@ -273,11 +287,11 @@ def send_location(token, chat_id, latitude, longitude, live_period=None, reply_t
         payload['reply_markup'] = _convert_markup(reply_markup)
     if disable_notification:
         payload['disable_notification'] = disable_notification
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def edit_message_live_location(token, latitude, longitude, chat_id=None, message_id=None,
-                               inline_message_id=None, reply_markup=None):
+                               inline_message_id=None, reply_markup=None, base_url=None):
     method_url = r'editMessageLiveLocation'
     payload = {'latitude': latitude, 'longitude': longitude}
     if chat_id:
@@ -288,11 +302,11 @@ def edit_message_live_location(token, latitude, longitude, chat_id=None, message
         payload['inline_message_id'] = inline_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def stop_message_live_location(token, chat_id=None, message_id=None,
-                               inline_message_id=None, reply_markup=None):
+                               inline_message_id=None, reply_markup=None, base_url=None):
     method_url = r'stopMessageLiveLocation'
     payload = {}
     if chat_id:
@@ -303,11 +317,11 @@ def stop_message_live_location(token, chat_id=None, message_id=None,
         payload['inline_message_id'] = inline_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def send_venue(token, chat_id, latitude, longitude, title, address, foursquare_id=None, disable_notification=None,
-               reply_to_message_id=None, reply_markup=None):
+               reply_to_message_id=None, reply_markup=None, base_url=None):
     method_url = r'sendVenue'
     payload = {'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude, 'title': title, 'address': address}
     if foursquare_id:
@@ -318,11 +332,11 @@ def send_venue(token, chat_id, latitude, longitude, title, address, foursquare_i
         payload['reply_to_message_id'] = reply_to_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def send_contact(token, chat_id, phone_number, first_name, last_name=None, disable_notification=None,
-                 reply_to_message_id=None, reply_markup=None):
+                 reply_to_message_id=None, reply_markup=None, base_url=None):
     method_url = r'sendContact'
     payload = {'chat_id': chat_id, 'phone_number': phone_number, 'first_name': first_name}
     if last_name:
@@ -333,17 +347,17 @@ def send_contact(token, chat_id, phone_number, first_name, last_name=None, disab
         payload['reply_to_message_id'] = reply_to_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def send_chat_action(token, chat_id, action):
+def send_chat_action(token, chat_id, action, base_url=None):
     method_url = r'sendChatAction'
     payload = {'chat_id': chat_id, 'action': action}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 def send_video(token, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, **kwargs):
+               disable_notification=None, timeout=None, base_url=None, **kwargs):
     method_url = r'sendVideo'
     payload = {'chat_id': chat_id}
     files = None
@@ -364,11 +378,11 @@ def send_video(token, chat_id, data, duration=None, caption=None, reply_to_messa
     if timeout:
         payload['connect-timeout'] = timeout
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_animation(token, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, **kwargs):
+               disable_notification=None, timeout=None, base_url=None, **kwargs):
     method_url = r'sendAnimation'
     payload = {'chat_id': chat_id}
     files = None
@@ -389,11 +403,11 @@ def send_animation(token, chat_id, data, duration=None, caption=None, reply_to_m
     if timeout:
         payload['connect-timeout'] = timeout
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_voice(token, chat_id, voice, caption=None, duration=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, **kwargs):
+               disable_notification=None, timeout=None, base_url=None, **kwargs):
     method_url = r'sendVoice'
     payload = {'chat_id': chat_id}
     files = None
@@ -414,11 +428,11 @@ def send_voice(token, chat_id, voice, caption=None, duration=None, reply_to_mess
     if timeout:
         payload['connect-timeout'] = timeout
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_video_note(token, chat_id, data, duration=None, length=None, reply_to_message_id=None, reply_markup=None,
-                    disable_notification=None, timeout=None):
+                    disable_notification=None, timeout=None, base_url=None):
     method_url = r'sendVideoNote'
     payload = {'chat_id': chat_id}
     files = None
@@ -440,11 +454,11 @@ def send_video_note(token, chat_id, data, duration=None, length=None, reply_to_m
         payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_audio(token, chat_id, audio, caption=None, duration=None, performer=None, title=None, reply_to_message_id=None,
-               reply_markup=None, disable_notification=None, timeout=None, **kwargs):
+               reply_markup=None, disable_notification=None, timeout=None, base_url=None, **kwargs):
     method_url = r'sendAudio'
     payload = {'chat_id': chat_id}
     files = None
@@ -469,11 +483,11 @@ def send_audio(token, chat_id, audio, caption=None, duration=None, performer=Non
     if timeout:
         payload['connect-timeout'] = timeout
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def send_data(token, chat_id, data, data_type, reply_to_message_id=None, reply_markup=None, disable_notification=None,
-              timeout=None, caption=None, **kwargs):
+              timeout=None, caption=None, base_url=None, **kwargs):
     method_url = get_method_by_type(data_type)
     payload = {'chat_id': chat_id}
     files = None
@@ -492,7 +506,7 @@ def send_data(token, chat_id, data, data_type, reply_to_message_id=None, reply_m
     if caption:
         payload['caption'] = caption
     payload.update(kwargs)
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
 def get_method_by_type(data_type):
@@ -502,23 +516,23 @@ def get_method_by_type(data_type):
         return r'sendSticker'
 
 
-def kick_chat_member(token, chat_id, user_id, until_date=None):
+def kick_chat_member(token, chat_id, user_id, until_date=None, base_url=None):
     method_url = 'kickChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
     if until_date:
         payload['until_date'] = until_date
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def unban_chat_member(token, chat_id, user_id):
+def unban_chat_member(token, chat_id, user_id, base_url=None):
     method_url = 'unbanChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
 def restrict_chat_member(token, chat_id, user_id, until_date=None, can_send_messages=None,
                          can_send_media_messages=None, can_send_other_messages=None,
-                         can_add_web_page_previews=None):
+                         can_add_web_page_previews=None, base_url=None):
     method_url = 'restrictChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
     if until_date:
@@ -532,12 +546,12 @@ def restrict_chat_member(token, chat_id, user_id, until_date=None, can_send_mess
     if can_add_web_page_previews:
         payload['can_add_web_page_previews'] = can_add_web_page_previews
 
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
 def promote_chat_member(token, chat_id, user_id, can_change_info=None, can_post_messages=None,
                         can_edit_messages=None, can_delete_messages=None, can_invite_users=None,
-                        can_restrict_members=None, can_pin_messages=None, can_promote_members=None):
+                        can_restrict_members=None, can_pin_messages=None, can_promote_members=None, base_url=None):
     method_url = 'promoteChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
     if can_change_info:
@@ -556,16 +570,16 @@ def promote_chat_member(token, chat_id, user_id, can_change_info=None, can_post_
         payload['can_pin_messages'] = can_pin_messages
     if can_promote_members:
         payload['can_promote_members'] = can_promote_members
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def export_chat_invite_link(token, chat_id):
+def export_chat_invite_link(token, chat_id, base_url=None):
     method_url = 'exportChatInviteLink'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def set_chat_photo(token, chat_id, photo):
+def set_chat_photo(token, chat_id, photo, base_url=None):
     method_url = 'setChatPhoto'
     payload = {'chat_id': chat_id}
     files = None
@@ -573,43 +587,43 @@ def set_chat_photo(token, chat_id, photo):
         files = {'photo': photo}
     else:
         payload['photo'] = photo
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def delete_chat_photo(token, chat_id):
+def delete_chat_photo(token, chat_id, base_url=None):
     method_url = 'deleteChatPhoto'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def set_chat_title(token, chat_id, title):
+def set_chat_title(token, chat_id, title, base_url=None):
     method_url = 'setChatTitle'
     payload = {'chat_id': chat_id, 'title': title}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def set_chat_description(token, chat_id, description):
+def set_chat_description(token, chat_id, description, base_url=None):
     method_url = 'setChatDescription'
     payload = {'chat_id': chat_id, 'description': description}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def pin_chat_message(token, chat_id, message_id, disable_notification=False):
+def pin_chat_message(token, chat_id, message_id, disable_notification=False, base_url=None):
     method_url = 'pinChatMessage'
     payload = {'chat_id': chat_id, 'message_id': message_id, 'disable_notification': disable_notification}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def unpin_chat_message(token, chat_id):
+def unpin_chat_message(token, chat_id, base_url=None):
     method_url = 'unpinChatMessage'
     payload = {'chat_id': chat_id}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
 # Updating messages
 
 def edit_message_text(token, text, chat_id=None, message_id=None, inline_message_id=None, parse_mode=None,
-                      disable_web_page_preview=None, reply_markup=None):
+                      disable_web_page_preview=None, reply_markup=None, base_url=None):
     method_url = r'editMessageText'
     payload = {'text': text}
     if chat_id:
@@ -624,10 +638,11 @@ def edit_message_text(token, text, chat_id=None, message_id=None, inline_message
         payload['disable_web_page_preview'] = disable_web_page_preview
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def edit_message_caption(token, caption, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None):
+def edit_message_caption(token, caption, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None,
+                         base_url=None):
     method_url = r'editMessageCaption'
     payload = {'caption': caption}
     if chat_id:
@@ -638,10 +653,11 @@ def edit_message_caption(token, caption, chat_id=None, message_id=None, inline_m
         payload['inline_message_id'] = inline_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def edit_message_reply_markup(token, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None):
+def edit_message_reply_markup(token, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None,
+                              base_url=None):
     method_url = r'editMessageReplyMarkup'
     payload = {}
     if chat_id:
@@ -652,18 +668,19 @@ def edit_message_reply_markup(token, chat_id=None, message_id=None, inline_messa
         payload['inline_message_id'] = inline_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def delete_message(token, chat_id, message_id):
+def delete_message(token, chat_id, message_id, base_url=None):
     method_url = r'deleteMessage'
     payload = {'chat_id': chat_id, 'message_id': message_id}
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 # Game
 
-def send_game(token, chat_id, game_short_name, disable_notification=None, reply_to_message_id=None, reply_markup=None):
+def send_game(token, chat_id, game_short_name, disable_notification=None, reply_to_message_id=None, reply_markup=None,
+              base_url=None):
     method_url = r'sendGame'
     payload = {'chat_id': chat_id, 'game_short_name': game_short_name}
     if disable_notification:
@@ -672,12 +689,12 @@ def send_game(token, chat_id, game_short_name, disable_notification=None, reply_
         payload['reply_to_message_id'] = reply_to_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 # https://core.telegram.org/bots/api#setgamescore
 def set_game_score(token, user_id, score, force=None, disable_edit_message=None, chat_id=None, message_id=None,
-                   inline_message_id=None):
+                   inline_message_id=None, base_url=None):
     """
     Use this method to set the score of the specified user in a game. On success, if the message was sent by the bot, returns the edited Message, otherwise returns True. Returns an error, if the new score is not greater than the user's current score in the chat.
     :param token: Bot's token (you don't need to fill this)
@@ -702,11 +719,11 @@ def set_game_score(token, user_id, score, force=None, disable_edit_message=None,
         payload['inline_message_id'] = inline_message_id
     if disable_edit_message:
         payload['disable_edit_message'] = disable_edit_message
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 # https://core.telegram.org/bots/api#getgamehighscores
-def get_game_high_scores(token, user_id, chat_id=None, message_id=None, inline_message_id=None):
+def get_game_high_scores(token, user_id, chat_id=None, message_id=None, inline_message_id=None, base_url=None):
     """
     Use this method to get data for high score tables. Will return the score of the specified user and several of his neighbors in a game. On success, returns an Array of GameHighScore objects.
     This method will currently return scores for the target user, plus two of his closest neighbors on each side. Will also return the top three users if the user and his neighbors are not among them. Please note that this behavior is subject to change.
@@ -725,7 +742,7 @@ def get_game_high_scores(token, user_id, chat_id=None, message_id=None, inline_m
         payload['message_id'] = message_id
     if inline_message_id:
         payload['inline_message_id'] = inline_message_id
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 # Payments (https://core.telegram.org/bots/api#payments)
@@ -733,7 +750,7 @@ def get_game_high_scores(token, user_id, chat_id=None, message_id=None, inline_m
 def send_invoice(token, chat_id, title, description, invoice_payload, provider_token, currency, prices,
                  start_parameter, photo_url=None, photo_size=None, photo_width=None, photo_height=None,
                  need_name=None, need_phone_number=None, need_email=None, need_shipping_address=None, is_flexible=None,
-                 disable_notification=None, reply_to_message_id=None, reply_markup=None):
+                 disable_notification=None, reply_to_message_id=None, reply_markup=None, base_url=None):
     """
     Use this method to send invoices. On success, the sent Message is returned.
     :param token: Bot's token (you don't need to fill this)
@@ -787,10 +804,10 @@ def send_invoice(token, chat_id, title, description, invoice_payload, provider_t
         payload['reply_to_message_id'] = reply_to_message_id
     if reply_markup:
         payload['reply_markup'] = _convert_markup(reply_markup)
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def answer_shipping_query(token, shipping_query_id, ok, shipping_options=None, error_message=None):
+def answer_shipping_query(token, shipping_query_id, ok, shipping_options=None, error_message=None, base_url=None):
     """
     If you sent an invoice requesting a shipping address and the parameter is_flexible was specified, the Bot API will send an Update with a shipping_query field to the bot. Use this method to reply to shipping queries. On success, True is returned.
     :param token: Bot's token (you don't need to fill this)
@@ -806,10 +823,10 @@ def answer_shipping_query(token, shipping_query_id, ok, shipping_options=None, e
         payload['shipping_options'] = _convert_list_json_serializable(shipping_options)
     if error_message:
         payload['error_message'] = error_message
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def answer_pre_checkout_query(token, pre_checkout_query_id, ok, error_message=None):
+def answer_pre_checkout_query(token, pre_checkout_query_id, ok, error_message=None, base_url=None):
     """
     Once the user has confirmed their payment and shipping details, the Bot API sends the final confirmation in the form of an Update with the field pre_checkout_query. Use this method to respond to such pre-checkout queries. On success, True is returned. Note: The Bot API must receive an answer within 10 seconds after the pre-checkout query was sent.
     :param token: Bot's token (you don't need to fill this)
@@ -822,12 +839,12 @@ def answer_pre_checkout_query(token, pre_checkout_query_id, ok, error_message=No
     payload = {'pre_checkout_query_id': pre_checkout_query_id, 'ok': ok}
     if error_message:
         payload['error_message'] = error_message
-    return _make_request(token, method_url, params=payload)
+    return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
 # InlineQuery
 
-def answer_callback_query(token, callback_query_id, text=None, show_alert=None, url=None, cache_time=None):
+def answer_callback_query(token, callback_query_id, text=None, show_alert=None, url=None, cache_time=None, base_url=None):
     """
     Use this method to send answers to callback queries sent from inline keyboards. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert. On success, True is returned.
     Alternatively, the user can be redirected to the specified Game URL. For this option to work, you must first create a game for your bot via BotFather and accept the terms. Otherwise, you may use links like telegram.me/your_bot?start=XXXX that open your bot with a parameter.
@@ -850,11 +867,11 @@ def answer_callback_query(token, callback_query_id, text=None, show_alert=None, 
         payload['url'] = url
     if cache_time:
         payload['cache_time'] = cache_time
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
 def answer_inline_query(token, inline_query_id, results, cache_time=None, is_personal=None, next_offset=None,
-                        switch_pm_text=None, switch_pm_parameter=None):
+                        switch_pm_text=None, switch_pm_parameter=None, base_url=None):
     method_url = 'answerInlineQuery'
     payload = {'inline_query_id': inline_query_id, 'results': _convert_list_json_serializable(results)}
     if cache_time:
@@ -867,22 +884,22 @@ def answer_inline_query(token, inline_query_id, results, cache_time=None, is_per
         payload['switch_pm_text'] = switch_pm_text
     if switch_pm_parameter:
         payload['switch_pm_parameter'] = switch_pm_parameter
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def get_sticker_set(token, name):
+def get_sticker_set(token, name, base_url=None):
     method_url = 'getStickerSet'
-    return _make_request(token, method_url, params={'name': name})
+    return _make_request(token, method_url, params={'name': name}, base_url=base_url)
 
 
-def upload_sticker_file(token, user_id, png_sticker):
+def upload_sticker_file(token, user_id, png_sticker, base_url=None):
     method_url = 'uploadStickerFile'
     payload = {'user_id': user_id}
     files = {'png_sticker': png_sticker}
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def create_new_sticker_set(token, user_id, name, title, png_sticker, emojis, contains_masks=None, mask_position=None):
+def create_new_sticker_set(token, user_id, name, title, png_sticker, emojis, contains_masks=None, mask_position=None, base_url=None):
     method_url = 'createNewStickerSet'
     payload = {'user_id': user_id, 'name': name, 'title': title, 'emojis': emojis}
     files = None
@@ -894,10 +911,10 @@ def create_new_sticker_set(token, user_id, name, title, png_sticker, emojis, con
         payload['contains_masks'] = contains_masks
     if mask_position:
         payload['mask_position'] = mask_position.to_json()
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def add_sticker_to_set(token, user_id, name, png_sticker, emojis, mask_position):
+def add_sticker_to_set(token, user_id, name, png_sticker, emojis, mask_position, base_url=None):
     method_url = 'addStickerToSet'
     payload = {'user_id': user_id, 'name': name, 'emojis': emojis}
     files = None
@@ -907,19 +924,19 @@ def add_sticker_to_set(token, user_id, name, png_sticker, emojis, mask_position)
         payload['png_sticker'] = png_sticker
     if mask_position:
         payload['mask_position'] = mask_position.to_json()
-    return _make_request(token, method_url, params=payload, files=files, method='post')
+    return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def set_sticker_position_in_set(token, sticker, position):
+def set_sticker_position_in_set(token, sticker, position, base_url=None):
     method_url = 'setStickerPositionInSet'
     payload = {'sticker': sticker, 'position': position}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def delete_sticker_from_set(token, sticker):
+def delete_sticker_from_set(token, sticker, base_url=None):
     method_url = 'deleteStickerFromSet'
     payload = {'sticker': sticker}
-    return _make_request(token, method_url, params=payload, method='post')
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
 def _convert_list_json_serializable(results):
