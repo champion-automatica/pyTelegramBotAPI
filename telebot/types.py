@@ -83,7 +83,7 @@ class JsonDeserializable:
         for x, y in six.iteritems(self.__dict__):
             if hasattr(y, '__dict__'):
                 d[x] = y.__dict__
-            else:
+            elif y is not None:
                 d[x] = y
 
         return six.text_type(d)
