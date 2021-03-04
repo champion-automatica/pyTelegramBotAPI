@@ -7,7 +7,7 @@ except ImportError:
 
 import six
 
-from telebot import util
+from telebot import util, logger
 
 
 class JsonSerializable:
@@ -92,6 +92,7 @@ class JsonDeserializable:
 class Update(JsonDeserializable):
     @classmethod
     def de_json(cls, json_type):
+        logger.debug('Update.de_json: %s', json_type)
         obj = cls.check_json(json_type)
         update_id = obj['update_id']
         message = None
@@ -1958,4 +1959,3 @@ class MaskPosition(JsonDeserializable, JsonSerializable):
 
     def to_dic(self):
         return {'point': self.point, 'x_shift': self.x_shift, 'y_shift': self.y_shift, 'scale': self.scale}
-
