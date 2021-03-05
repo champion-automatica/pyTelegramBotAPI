@@ -48,9 +48,12 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
     connect_timeout = CONNECT_TIMEOUT
     if files and format_header_param:
         fields.format_header_param = _no_encode(format_header_param)
-    if params:
-        if 'timeout' in params: read_timeout = params['timeout']
-        if 'connect-timeout' in params: connect_timeout = params['connect-timeout']
+    if 'timeout' in params:
+        read_timeout = params['timeout']
+    if 'connect-timeout' in params:
+        connect_timeout = params['connect-timeout']
+    if 'reply_markup' in params:
+        params['reply_markup'] = _convert_markup(params['reply_markup'])
     result = _get_req_session().request(method, request_url, params=params, files=files,
                                         timeout=(connect_timeout, read_timeout), proxies=proxy)
     logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
