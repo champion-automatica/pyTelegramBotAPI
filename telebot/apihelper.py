@@ -258,40 +258,20 @@ def send_photo(token, chat_id, photo, base_url=None, **payload):
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_location(token, chat_id, latitude, longitude, base_url=None, **kwargs):
+def send_location(token, chat_id, latitude, longitude, base_url=None, **payload):
     method_url = r'sendLocation'
-    payload = {'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude}
-    payload.update(**kwargs)
+    payload.update({'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude})
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def edit_message_live_location(token, latitude, longitude, chat_id=None, message_id=None,
-                               inline_message_id=None, reply_markup=None, base_url=None):
+def edit_message_live_location(token, latitude, longitude, base_url=None, **payload):
     method_url = r'editMessageLiveLocation'
-    payload = {'latitude': latitude, 'longitude': longitude}
-    if chat_id:
-        payload['chat_id'] = chat_id
-    if message_id:
-        payload['message_id'] = message_id
-    if inline_message_id:
-        payload['inline_message_id'] = inline_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload.update({'latitude': latitude, 'longitude': longitude})
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def stop_message_live_location(token, chat_id=None, message_id=None,
-                               inline_message_id=None, reply_markup=None, base_url=None):
+def stop_message_live_location(token, base_url=None, **payload):
     method_url = r'stopMessageLiveLocation'
-    payload = {}
-    if chat_id:
-        payload['chat_id'] = chat_id
-    if message_id:
-        payload['message_id'] = message_id
-    if inline_message_id:
-        payload['inline_message_id'] = inline_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
@@ -505,52 +485,20 @@ def unpin_chat_message(token, chat_id, base_url=None):
 
 # Updating messages
 
-def edit_message_text(token, text, chat_id=None, message_id=None, inline_message_id=None, parse_mode=None,
-                      disable_web_page_preview=None, reply_markup=None, base_url=None):
+def edit_message_text(token, text, base_url=None, **payload):
     method_url = r'editMessageText'
-    payload = {'text': text}
-    if chat_id:
-        payload['chat_id'] = chat_id
-    if message_id:
-        payload['message_id'] = message_id
-    if inline_message_id:
-        payload['inline_message_id'] = inline_message_id
-    if parse_mode:
-        payload['parse_mode'] = parse_mode
-    if disable_web_page_preview:
-        payload['disable_web_page_preview'] = disable_web_page_preview
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload['text'] = text
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def edit_message_caption(token, caption, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None,
-                         base_url=None):
+def edit_message_caption(token, caption, base_url=None, **payload):
     method_url = r'editMessageCaption'
-    payload = {'caption': caption}
-    if chat_id:
-        payload['chat_id'] = chat_id
-    if message_id:
-        payload['message_id'] = message_id
-    if inline_message_id:
-        payload['inline_message_id'] = inline_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload['caption'] = caption
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def edit_message_reply_markup(token, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None,
-                              base_url=None):
+def edit_message_reply_markup(token, base_url=None, **payload):
     method_url = r'editMessageReplyMarkup'
-    payload = {}
-    if chat_id:
-        payload['chat_id'] = chat_id
-    if message_id:
-        payload['message_id'] = message_id
-    if inline_message_id:
-        payload['inline_message_id'] = inline_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
