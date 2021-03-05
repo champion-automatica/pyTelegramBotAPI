@@ -452,8 +452,7 @@ class TeleBot:
         result = apihelper.get_chat_member(self.token, chat_id, user_id, base_url=self.api_url)
         return types.ChatMember.de_json(result)
 
-    def send_message(self, chat_id, text, disable_web_page_preview=None, reply_to_message_id=None, reply_markup=None,
-                     parse_mode=None, disable_notification=None):
+    def send_message(self, chat_id, text, **kwargs):
         """
         Use this method to send text messages.
 
@@ -469,9 +468,7 @@ class TeleBot:
         :param disable_notification: Boolean, Optional. Sends the message silently.
         :return: API reply.
         """
-        return types.Message.de_json(
-            apihelper.send_message(self.token, chat_id, text, disable_web_page_preview, reply_to_message_id,
-                                   reply_markup, parse_mode, disable_notification, base_url=self.api_url))
+        return types.Message.de_json(apihelper.send_message(self.token, chat_id, text, base_url=self.api_url, **kwargs))
 
     def forward_message(self, chat_id, from_chat_id, message_id, disable_notification=None):
         """
@@ -495,8 +492,7 @@ class TeleBot:
         """
         return apihelper.delete_message(self.token, chat_id, message_id, base_url=self.api_url)
 
-    def send_photo(self, chat_id, photo, caption=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, **kwargs):
+    def send_photo(self, chat_id, photo, **kwargs):
         """
         Use this method to send photos.
         :param disable_notification:
@@ -508,11 +504,9 @@ class TeleBot:
         :return: API reply.
         """
         return types.Message.de_json(
-            apihelper.send_photo(self.token, chat_id, photo, caption, reply_to_message_id, reply_markup,
-                                 disable_notification, base_url=self.api_url, **kwargs))
+            apihelper.send_photo(self.token, chat_id, photo, base_url=self.api_url, **kwargs))
 
-    def send_audio(self, chat_id, audio, caption=None, duration=None, performer=None, title=None,
-                   reply_to_message_id=None, reply_markup=None, disable_notification=None, timeout=None, **kwargs):
+    def send_audio(self, chat_id, audio, **kwargs):
         """
         Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .mp3 format.
         :param chat_id:Unique identifier for the message recipient
@@ -525,11 +519,9 @@ class TeleBot:
         :return: Message
         """
         return types.Message.de_json(
-            apihelper.send_audio(self.token, chat_id, audio, caption, duration, performer, title, reply_to_message_id,
-                                 reply_markup, disable_notification, timeout, base_url=self.api_url, **kwargs))
+            apihelper.send_audio(self.token, chat_id, audio, base_url=self.api_url, **kwargs))
 
-    def send_voice(self, chat_id, voice, caption=None, duration=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, timeout=None, **kwargs):
+    def send_voice(self, chat_id, voice, **kwargs):
         """
         Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message.
         :param chat_id:Unique identifier for the message recipient.
@@ -540,11 +532,9 @@ class TeleBot:
         :return: Message
         """
         return types.Message.de_json(
-            apihelper.send_voice(self.token, chat_id, voice, caption, duration, reply_to_message_id, reply_markup,
-                                 disable_notification, timeout, base_url=self.api_url, **kwargs))
+            apihelper.send_voice(self.token, chat_id, voice, base_url=self.api_url, **kwargs))
 
-    def send_document(self, chat_id, data, reply_to_message_id=None, caption=None, reply_markup=None,
-                      disable_notification=None, timeout=None, **kwargs):
+    def send_document(self, chat_id, data, timeout=None, **kwargs):
         """
         Use this method to send general files.
         :param chat_id:
@@ -554,11 +544,9 @@ class TeleBot:
         :return: API reply.
         """
         return types.Message.de_json(
-            apihelper.send_data(self.token, chat_id, data, 'document', reply_to_message_id, reply_markup,
-                                disable_notification, timeout, caption=caption, base_url=self.api_url, **kwargs))
+            apihelper.send_data(self.token, chat_id, data, 'document', timeout, base_url=self.api_url, **kwargs))
 
-    def send_sticker(self, chat_id, data, reply_to_message_id=None, reply_markup=None, disable_notification=None,
-                     timeout=None):
+    def send_sticker(self, chat_id, data, timeout=None, **kwargs):
         """
         Use this method to send .webp stickers.
         :param chat_id:
@@ -568,11 +556,9 @@ class TeleBot:
         :return: API reply.
         """
         return types.Message.de_json(
-            apihelper.send_data(self.token, chat_id, data, 'sticker', reply_to_message_id, reply_markup,
-                                disable_notification, timeout, base_url=self.api_url))
+            apihelper.send_data(self.token, chat_id, data, 'sticker', timeout, base_url=self.api_url, **kwargs))
 
-    def send_video(self, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, timeout=None, **kwargs):
+    def send_video(self, chat_id, data, timeout=None, **kwargs):
         """
         Use this method to send video files, Telegram clients support mp4 videos.
         :param chat_id: Integer : Unique identifier for the message recipient — User or GroupChat id
@@ -584,11 +570,9 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.send_video(self.token, chat_id, data, duration, caption, reply_to_message_id, reply_markup,
-                                 disable_notification, timeout, base_url=self.api_url, **kwargs))
+            apihelper.send_video(self.token, chat_id, data, timeout, base_url=self.api_url, **kwargs))
 
-    def send_animation(self, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-                   disable_notification=None, timeout=None, **kwargs):
+    def send_animation(self, chat_id, data, timeout=None, **kwargs):
         """
         Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound).
         :param chat_id: Integer : Unique identifier for the message recipient — User or GroupChat id
@@ -601,11 +585,9 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.send_animation(self.token, chat_id, data, duration, caption, reply_to_message_id, reply_markup,
-                                 disable_notification, timeout, base_url=self.api_url))
+            apihelper.send_animation(self.token, chat_id, data, timeout, base_url=self.api_url))
 
-    def send_video_note(self, chat_id, data, duration=None, length=None, reply_to_message_id=None, reply_markup=None,
-                        disable_notification=None, timeout=None):
+    def send_video_note(self, chat_id, data, timeout=None, **kwargs):
         """
         Use this method to send video files, Telegram clients support mp4 videos.
         :param chat_id: Integer : Unique identifier for the message recipient — User or GroupChat id
@@ -617,11 +599,9 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.send_video_note(self.token, chat_id, data, duration, length, reply_to_message_id, reply_markup,
-                                      disable_notification, timeout, base_url=self.api_url))
+            apihelper.send_video_note(self.token, chat_id, data, timeout, base_url=self.api_url, **kwargs))
 
-    def send_location(self, chat_id, latitude, longitude, live_period=None, reply_to_message_id=None, reply_markup=None,
-                      disable_notification=None):
+    def send_location(self, chat_id, latitude, longitude, **kwargs):
         """
         Use this method to send point on the map.
         :param chat_id:
@@ -633,8 +613,7 @@ class TeleBot:
         :return: API reply.
         """
         return types.Message.de_json(
-            apihelper.send_location(self.token, chat_id, latitude, longitude, live_period, reply_to_message_id, reply_markup,
-                                    disable_notification, base_url=self.api_url))
+            apihelper.send_location(self.token, chat_id, latitude, longitude, base_url=self.api_url, **kwargs))
 
     def edit_message_live_location(self, latitude, longitude, chat_id=None, message_id=None,
                                    inline_message_id=None, reply_markup=None):
@@ -666,8 +645,7 @@ class TeleBot:
             apihelper.stop_message_live_location(self, chat_id, message_id, inline_message_id, reply_markup,
                                                  base_url=self.api_url))
 
-    def send_venue(self, chat_id, latitude, longitude, title, address, foursquare_id=None, disable_notification=None,
-                   reply_to_message_id=None, reply_markup=None):
+    def send_venue(self, chat_id, latitude, longitude, title, address, **kwargs):
         """
         Use this method to send information about a venue.
         :param chat_id: Integer or String : Unique identifier for the target chat or username of the target channel
@@ -682,15 +660,13 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.send_venue(self.token, chat_id, latitude, longitude, title, address, foursquare_id,
-                                 disable_notification, reply_to_message_id, reply_markup, base_url=self.api_url)
+            apihelper.send_venue(self.token, chat_id, latitude, longitude, title, address, base_url=self.api_url,
+                                 **kwargs)
         )
 
-    def send_contact(self, chat_id, phone_number, first_name, last_name=None, disable_notification=None,
-                     reply_to_message_id=None, reply_markup=None):
+    def send_contact(self, chat_id, phone_number, first_name, **kwargs):
         return types.Message.de_json(
-            apihelper.send_contact(self.token, chat_id, phone_number, first_name, last_name, disable_notification,
-                                   reply_to_message_id, reply_markup, base_url=self.api_url)
+            apihelper.send_contact(self.token, chat_id, phone_number, first_name, base_url=self.api_url, **kwargs)
         )
 
     def send_chat_action(self, chat_id, action):
@@ -877,10 +853,8 @@ class TeleBot:
             return result
         return types.Message.de_json(result)
 
-    def send_game(self, chat_id, game_short_name, disable_notification=None, reply_to_message_id=None,
-                  reply_markup=None):
-        result = apihelper.send_game(self.token, chat_id, game_short_name, disable_notification, reply_to_message_id,
-                                     reply_markup, base_url=self.api_url)
+    def send_game(self, chat_id, game_short_name, **kwargs):
+        result = apihelper.send_game(self.token, chat_id, game_short_name, base_url=self.api_url, **kwargs)
         return types.Message.de_json(result)
 
     def set_game_score(self, user_id, score, force=None, chat_id=None, message_id=None, inline_message_id=None,
@@ -900,15 +874,9 @@ class TeleBot:
         return ret
 
     def send_invoice(self, chat_id, title, description, invoice_payload, provider_token, currency, prices,
-                     start_parameter, photo_url=None, photo_size=None, photo_width=None, photo_height=None,
-                     need_name=None, need_phone_number=None, need_email=None, need_shipping_address=None,
-                     is_flexible=None,
-                     disable_notification=None, reply_to_message_id=None, reply_markup=None):
+                     start_parameter, **kwargs):
         result = apihelper.send_invoice(self.token, chat_id, title, description, invoice_payload, provider_token,
-                                        currency, prices, start_parameter, photo_url, photo_size, photo_width,
-                                        photo_height,
-                                        need_name, need_phone_number, need_email, need_shipping_address, is_flexible,
-                                        disable_notification, reply_to_message_id, reply_markup, base_url=self.api_url)
+                                        currency, prices, start_parameter, base_url=self.api_url, **kwargs)
         return types.Message.de_json(result)
 
     def answer_shipping_query(self, shipping_query_id, ok, shipping_options=None, error_message=None):
@@ -965,7 +933,6 @@ class TeleBot:
     def get_sticker_set(self, name):
         """
         Use this method to get a sticker set. On success, a StickerSet object is returned.
-        :param token:
         :param name:
         :return:
         """

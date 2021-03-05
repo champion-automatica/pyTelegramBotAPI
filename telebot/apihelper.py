@@ -117,8 +117,7 @@ def download_file(token, file_path, params=None):
     return result.content
 
 
-def send_message(token, chat_id, text, disable_web_page_preview=None, reply_to_message_id=None, reply_markup=None,
-                 parse_mode=None, disable_notification=None, base_url=None):
+def send_message(token, chat_id, text, base_url=None, **payload):
     """
     Use this method to send text messages. On success, the sent Message is returned.
     :param token:
@@ -130,17 +129,8 @@ def send_message(token, chat_id, text, disable_web_page_preview=None, reply_to_m
     :return:
     """
     method_url = r'sendMessage'
-    payload = {'chat_id': str(chat_id), 'text': text}
-    if disable_web_page_preview:
-        payload['disable_web_page_preview'] = disable_web_page_preview
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if parse_mode:
-        payload['parse_mode'] = parse_mode
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
+    payload['chat_id'] = str(chat_id)
+    payload['text'] = text
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
@@ -254,39 +244,21 @@ def forward_message(token, chat_id, from_chat_id, message_id, disable_notificati
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def send_photo(token, chat_id, photo, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, base_url=None, **kwargs):
+def send_photo(token, chat_id, photo, base_url=None, **payload):
     method_url = r'sendPhoto'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(photo):
         files = {'photo': photo}
     else:
         payload['photo'] = photo
-    if caption:
-        payload['caption'] = caption
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_location(token, chat_id, latitude, longitude, live_period=None, reply_to_message_id=None, reply_markup=None,
-                  disable_notification=None, base_url=None):
+def send_location(token, chat_id, latitude, longitude, base_url=None, **kwargs):
     method_url = r'sendLocation'
     payload = {'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude}
-    if live_period:
-        payload['live_perion'] = live_period
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
+    payload.update(**kwargs)
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
@@ -320,33 +292,15 @@ def stop_message_live_location(token, chat_id=None, message_id=None,
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def send_venue(token, chat_id, latitude, longitude, title, address, foursquare_id=None, disable_notification=None,
-               reply_to_message_id=None, reply_markup=None, base_url=None):
+def send_venue(token, chat_id, latitude, longitude, title, address, base_url=None, **payload):
     method_url = r'sendVenue'
-    payload = {'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude, 'title': title, 'address': address}
-    if foursquare_id:
-        payload['foursquare_id'] = foursquare_id
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload.update({'chat_id': chat_id, 'latitude': latitude, 'longitude': longitude, 'title': title, 'address': address})
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def send_contact(token, chat_id, phone_number, first_name, last_name=None, disable_notification=None,
-                 reply_to_message_id=None, reply_markup=None, base_url=None):
+def send_contact(token, chat_id, phone_number, first_name, base_url=None, **payload):
     method_url = r'sendContact'
-    payload = {'chat_id': chat_id, 'phone_number': phone_number, 'first_name': first_name}
-    if last_name:
-        payload['last_name'] = last_name
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload.update({'chat_id': chat_id, 'phone_number': phone_number, 'first_name': first_name})
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
@@ -356,156 +310,82 @@ def send_chat_action(token, chat_id, action, base_url=None):
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
-def send_video(token, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, base_url=None, **kwargs):
+def send_video(token, chat_id, data, timeout=None, base_url=None, **payload):
     method_url = r'sendVideo'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(data):
         files = {'video': data}
     else:
         payload['video'] = data
-    if duration:
-        payload['duration'] = duration
-    if caption:
-        payload['caption'] = caption
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_animation(token, chat_id, data, duration=None, caption=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, base_url=None, **kwargs):
+def send_animation(token, chat_id, data, timeout=None, base_url=None, **payload):
     method_url = r'sendAnimation'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(data):
         files = {'animation': data}
     else:
         payload['animation'] = data
-    if duration:
-        payload['duration'] = duration
-    if caption:
-        payload['caption'] = caption
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_voice(token, chat_id, voice, caption=None, duration=None, reply_to_message_id=None, reply_markup=None,
-               disable_notification=None, timeout=None, base_url=None, **kwargs):
+def send_voice(token, chat_id, voice, timeout=None, base_url=None, **payload):
     method_url = r'sendVoice'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(voice):
         files = {'voice': voice}
     else:
         payload['voice'] = voice
-    if caption:
-        payload['caption'] = caption
-    if duration:
-        payload['duration'] = duration
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_video_note(token, chat_id, data, duration=None, length=None, reply_to_message_id=None, reply_markup=None,
-                    disable_notification=None, timeout=None, base_url=None):
+def send_video_note(token, chat_id, data, timeout=None, base_url=None, **payload):
     method_url = r'sendVideoNote'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(data):
         files = {'video_note': data}
     else:
         payload['video_note'] = data
-    if duration:
-        payload['duration'] = duration
-    if length:
-        payload['length'] = length
-    else:
-        payload['length'] = 639  # seems like it is MAX length size
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
+    payload.setdefault('length', 639)  # seems like it is MAX length size
     if timeout:
         payload['connect-timeout'] = timeout
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_audio(token, chat_id, audio, caption=None, duration=None, performer=None, title=None, reply_to_message_id=None,
-               reply_markup=None, disable_notification=None, timeout=None, base_url=None, **kwargs):
+def send_audio(token, chat_id, audio, timeout=None, base_url=None, **payload):
     method_url = r'sendAudio'
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(audio):
         files = {'audio': audio}
     else:
         payload['audio'] = audio
-    if caption:
-        payload['caption'] = caption
-    if duration:
-        payload['duration'] = duration
-    if performer:
-        payload['performer'] = performer
-    if title:
-        payload['title'] = title
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def send_data(token, chat_id, data, data_type, reply_to_message_id=None, reply_markup=None, disable_notification=None,
-              timeout=None, caption=None, base_url=None, **kwargs):
+def send_data(token, chat_id, data, data_type, timeout=None, base_url=None, **payload):
     method_url = get_method_by_type(data_type)
-    payload = {'chat_id': chat_id}
+    payload['chat_id'] = chat_id
     files = None
     if not util.is_string(data):
         files = {data_type: data}
     else:
         payload[data_type] = data
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
     if timeout:
         payload['connect-timeout'] = timeout
-    if caption:
-        payload['caption'] = caption
-    payload.update(kwargs)
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
@@ -679,16 +559,10 @@ def delete_message(token, chat_id, message_id, base_url=None):
 
 # Game
 
-def send_game(token, chat_id, game_short_name, disable_notification=None, reply_to_message_id=None, reply_markup=None,
-              base_url=None):
+def send_game(token, chat_id, game_short_name, base_url=None, **payload):
     method_url = r'sendGame'
-    payload = {'chat_id': chat_id, 'game_short_name': game_short_name}
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+    payload['chat_id'] = chat_id
+    payload['game_short_name'] = game_short_name
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
@@ -748,9 +622,7 @@ def get_game_high_scores(token, user_id, chat_id=None, message_id=None, inline_m
 # Payments (https://core.telegram.org/bots/api#payments)
 
 def send_invoice(token, chat_id, title, description, invoice_payload, provider_token, currency, prices,
-                 start_parameter, photo_url=None, photo_size=None, photo_width=None, photo_height=None,
-                 need_name=None, need_phone_number=None, need_email=None, need_shipping_address=None, is_flexible=None,
-                 disable_notification=None, reply_to_message_id=None, reply_markup=None, base_url=None):
+                 start_parameter, base_url=None, **payload):
     """
     Use this method to send invoices. On success, the sent Message is returned.
     :param token: Bot's token (you don't need to fill this)
@@ -777,33 +649,9 @@ def send_invoice(token, chat_id, title, description, invoice_payload, provider_t
     :return:
     """
     method_url = r'sendInvoice'
-    payload = {'chat_id': chat_id, 'title': title, 'description': description, 'payload': invoice_payload,
+    payload.update({'chat_id': chat_id, 'title': title, 'description': description, 'payload': invoice_payload,
                'provider_token': provider_token, 'start_parameter': start_parameter, 'currency': currency,
-               'prices': _convert_list_json_serializable(prices)}
-    if photo_url:
-        payload['photo_url'] = photo_url
-    if photo_size:
-        payload['photo_size'] = photo_size
-    if photo_width:
-        payload['photo_width'] = photo_width
-    if photo_height:
-        payload['photo_height'] = photo_height
-    if need_name:
-        payload['need_name'] = need_name
-    if need_phone_number:
-        payload['need_phone_number'] = need_phone_number
-    if need_email:
-        payload['need_email'] = need_email
-    if need_shipping_address:
-        payload['need_shipping_address'] = need_shipping_address
-    if is_flexible:
-        payload['is_flexible'] = is_flexible
-    if disable_notification:
-        payload['disable_notification'] = disable_notification
-    if reply_to_message_id:
-        payload['reply_to_message_id'] = reply_to_message_id
-    if reply_markup:
-        payload['reply_markup'] = _convert_markup(reply_markup)
+               'prices': _convert_list_json_serializable(prices)})
     return _make_request(token, method_url, params=payload, base_url=base_url)
 
 
@@ -844,7 +692,8 @@ def answer_pre_checkout_query(token, pre_checkout_query_id, ok, error_message=No
 
 # InlineQuery
 
-def answer_callback_query(token, callback_query_id, text=None, show_alert=None, url=None, cache_time=None, base_url=None):
+def answer_callback_query(token, callback_query_id, text=None, show_alert=None, url=None, cache_time=None,
+                          base_url=None):
     """
     Use this method to send answers to callback queries sent from inline keyboards. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert. On success, True is returned.
     Alternatively, the user can be redirected to the specified Game URL. For this option to work, you must first create a game for your bot via BotFather and accept the terms. Otherwise, you may use links like telegram.me/your_bot?start=XXXX that open your bot with a parameter.
@@ -899,7 +748,8 @@ def upload_sticker_file(token, user_id, png_sticker, base_url=None):
     return _make_request(token, method_url, params=payload, files=files, method='post', base_url=base_url)
 
 
-def create_new_sticker_set(token, user_id, name, title, png_sticker, emojis, contains_masks=None, mask_position=None, base_url=None):
+def create_new_sticker_set(token, user_id, name, title, png_sticker, emojis, contains_masks=None, mask_position=None,
+                           base_url=None):
     method_url = 'createNewStickerSet'
     payload = {'user_id': user_id, 'name': name, 'title': title, 'emojis': emojis}
     files = None
