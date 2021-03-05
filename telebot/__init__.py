@@ -615,8 +615,7 @@ class TeleBot:
         return types.Message.de_json(
             apihelper.send_location(self.token, chat_id, latitude, longitude, base_url=self.api_url, **kwargs))
 
-    def edit_message_live_location(self, latitude, longitude, chat_id=None, message_id=None,
-                                   inline_message_id=None, reply_markup=None):
+    def edit_message_live_location(self, latitude, longitude, **kwargs):
         """
         Use this method to edit live location
         :param latitude:
@@ -628,10 +627,9 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.edit_message_live_location(self, latitude, longitude, chat_id, message_id,
-                                                 inline_message_id, reply_markup, base_url=self.api_url))
+            apihelper.edit_message_live_location(self, latitude, longitude, base_url=self.api_url, **kwargs))
 
-    def stop_message_live_location(self, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None):
+    def stop_message_live_location(self, *args, **kwargs):
         """
         Use this method to stop updating a live location message sent by the bot
         or via the bot (for inline bots) before live_period expires
@@ -642,8 +640,7 @@ class TeleBot:
         :return:
         """
         return types.Message.de_json(
-            apihelper.stop_message_live_location(self, chat_id, message_id, inline_message_id, reply_markup,
-                                                 base_url=self.api_url))
+            apihelper.stop_message_live_location(self, base_url=self.api_url, **kwargs))
 
     def send_venue(self, chat_id, latitude, longitude, title, address, **kwargs):
         """
@@ -838,17 +835,14 @@ class TeleBot:
         """
         return apihelper.unpin_chat_message(self.token, chat_id, base_url=self.api_url)
 
-    def edit_message_text(self, text, chat_id=None, message_id=None, inline_message_id=None, parse_mode=None,
-                          disable_web_page_preview=None, reply_markup=None):
-        result = apihelper.edit_message_text(self.token, text, chat_id, message_id, inline_message_id, parse_mode,
-                                             disable_web_page_preview, reply_markup, base_url=self.api_url)
+    def edit_message_text(self, text, **kwargs):
+        result = apihelper.edit_message_text(self.token, text, base_url=self.api_url, **kwargs)
         if type(result) == bool:  # if edit inline message return is bool not Message.
             return result
         return types.Message.de_json(result)
 
-    def edit_message_reply_markup(self, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None):
-        result = apihelper.edit_message_reply_markup(self.token, chat_id, message_id, inline_message_id, reply_markup,
-                                                     base_url=self.api_url)
+    def edit_message_reply_markup(self, *args, **kwargs):
+        result = apihelper.edit_message_reply_markup(self.token, base_url=self.api_url, **kwargs)
         if type(result) == bool:
             return result
         return types.Message.de_json(result)
@@ -887,9 +881,8 @@ class TeleBot:
         return apihelper.answer_pre_checkout_query(self.token, pre_checkout_query_id, ok, error_message,
                                                    base_url=self.api_url)
 
-    def edit_message_caption(self, caption, chat_id=None, message_id=None, inline_message_id=None, reply_markup=None):
-        result = apihelper.edit_message_caption(self.token, caption, chat_id, message_id, inline_message_id,
-                                                reply_markup, base_url=self.api_url)
+    def edit_message_caption(self, caption, **kwargs):
+        result = apihelper.edit_message_caption(self.token, caption, base_url=self.api_url, **kwargs)
         if type(result) == bool:
             return result
         return types.Message.de_json(result)
