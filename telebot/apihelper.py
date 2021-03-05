@@ -48,6 +48,7 @@ def _make_request(token, method_name, method='get', params=None, files=None, bas
     connect_timeout = CONNECT_TIMEOUT
     if files and format_header_param:
         fields.format_header_param = _no_encode(format_header_param)
+    params = params or {}
     if 'timeout' in params:
         read_timeout = params['timeout']
     if 'connect-timeout' in params:
