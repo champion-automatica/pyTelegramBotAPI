@@ -57,6 +57,7 @@ class TeleBot:
         setChatDescription
         pinChatMessage
         unpinChatMessage
+        unpinAllChatMessages
         leaveChat
         getChat
         getChatAdministrators
@@ -835,6 +836,9 @@ class TeleBot:
         """
         return apihelper.unpin_chat_message(self.token, chat_id, base_url=self.api_url)
 
+    def unpin_all_chat_messages(self, chat_id):
+        return apihelper.unpin_all_chat_messages(self.token, chat_id, base_url=self.api_url)
+
     def edit_message_text(self, text, **kwargs):
         result = apihelper.edit_message_text(self.token, text, base_url=self.api_url, **kwargs)
         if type(result) == bool:  # if edit inline message return is bool not Message.
@@ -1408,6 +1412,10 @@ class AsyncTeleBot(TeleBot):
     @util.async()
     def unpin_chat_message(self, *args):
         return TeleBot.unpin_chat_message(self, *args)
+
+    @util.async()
+    def unpin_all_chat_messages(self, *args):
+        return TeleBot.unpin_all_chat_messages(self, *args)
 
     @util.async()
     def edit_message_text(self, *args, **kwargs):

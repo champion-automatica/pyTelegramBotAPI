@@ -484,6 +484,12 @@ def unpin_chat_message(token, chat_id, base_url=None):
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
+def unpin_all_chat_messages(token, chat_id, base_url=None):
+    method_url = 'unpinAllChatMessages'
+    payload = {'chat_id': chat_id}
+    return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
+
+
 # Updating messages
 
 def edit_message_text(token, text, base_url=None, **payload):
