@@ -825,18 +825,27 @@ class TeleBot:
         """
         return apihelper.pin_chat_message(self.token, chat_id, message_id, disable_notification, base_url=self.api_url)
 
-    def unpin_chat_message(self, chat_id):
+    def unpin_chat_message(self, chat_id, message_id=None):
         """
-        Use this method to unpin a message in a supergroup chat.
+        Use this method to unpin specific pinned message in a supergroup chat.
+        The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
+        Returns True on success.
+        :param chat_id: Int or Str: Unique identifier for the target chat or username of the target channel
+            (in the format @channelusername)
+        :param message_id: Int: Identifier of a message to unpin
+        :return:
+        """
+        return apihelper.unpin_chat_message(self.token, chat_id, message_id, base_url=self.api_url)
+
+    def unpin_all_chat_messages(self, chat_id):
+        """
+        Use this method to unpin a all pinned messages in a supergroup chat.
         The bot must be an administrator in the chat for this to work and must have the appropriate admin rights.
         Returns True on success.
         :param chat_id: Int or Str: Unique identifier for the target chat or username of the target channel
             (in the format @channelusername)
         :return:
         """
-        return apihelper.unpin_chat_message(self.token, chat_id, base_url=self.api_url)
-
-    def unpin_all_chat_messages(self, chat_id):
         return apihelper.unpin_all_chat_messages(self.token, chat_id, base_url=self.api_url)
 
     def edit_message_text(self, text, **kwargs):

@@ -478,9 +478,11 @@ def pin_chat_message(token, chat_id, message_id, disable_notification=False, bas
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def unpin_chat_message(token, chat_id, base_url=None):
+def unpin_chat_message(token, chat_id, message_id, base_url=None):
     method_url = 'unpinChatMessage'
     payload = {'chat_id': chat_id}
+    if message_id:
+        payload['message_id'] = message_id
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
