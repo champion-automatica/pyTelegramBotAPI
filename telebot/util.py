@@ -155,6 +155,18 @@ def async():
 def is_string(var):
     return isinstance(var, string_types)
 
+
+def is_dict(var) -> bool:
+    """
+    Returns True if the given object is a dictionary.
+    :param var: object to be checked
+    :type var: :obj:`object`
+    :return: True if the given object is a dictionary.
+    :rtype: :obj:`bool`
+    """
+    return isinstance(var, dict)
+
+
 def is_command(text):
     """
     Checks if `text` is a command. Telegram chat commands start with the '/' character.

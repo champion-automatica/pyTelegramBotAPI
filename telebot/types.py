@@ -59,34 +59,29 @@ class JsonDeserializable:
         raise NotImplementedError
 
     @staticmethod
-    def check_json(json_type):
+    def check_json(json_type, dict_copy = True):
         """
         Checks whether json_type is a dict or a string. If it is already a dict, it is returned as-is.
         If it is not, it is converted to a dict by means of json.loads(json_type)
-        :param json_type:
-        :return:
-        """
-        try:
-            str_types = (str, unicode)
-        except NameError:
-            str_types = (str,)
+        :meta private:
 
-        if type(json_type) == dict:
-            return json_type
-        elif type(json_type) in str_types:
+        :param json_type: input json or parsed dict
+        :param dict_copy: if dict is passed and it is changed outside - should be True!
+        :return: Dictionary parsed from json or original dict
+        """
+        if util.is_dict(json_type):
+            return json_type.copy() if dict_copy else json_type
+        elif util.is_string(json_type):
             return json.loads(json_type)
         else:
             raise ValueError("json_type should be a json dict or string.")
 
     def __str__(self):
-        d = {}
-        for x, y in six.iteritems(self.__dict__):
-            if hasattr(y, '__dict__'):
-                d[x] = y.__dict__
-            elif y is not None:
-                d[x] = y
-
-        return six.text_type(d)
+        d = {
+            x: y.__dict__ if hasattr(y, '__dict__') else y
+            for x, y in self.__dict__.items()
+        }
+        return str(d)
 
 
 class Update(JsonDeserializable):
@@ -249,6 +244,115 @@ class Chat(JsonDeserializable):
         self.can_set_sticker_set = can_set_sticker_set
 
 
+class VideoChatStarted(JsonDeserializable):
+    """
+    This object represents a service message about a video chat started in the chat. Currently holds no information.
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        return cls()
+
+    def __init__(self):
+        pass
+
+
+class VoiceChatStarted(VideoChatStarted):
+    """
+    Deprecated, use :class:`VideoChatStarted` instead.
+    """
+
+    def __init__(self):
+        logger.warning('VoiceChatStarted is deprecated. Use VideoChatStarted instead.')
+        super().__init__()
+
+
+class VideoChatScheduled(JsonDeserializable):
+    """
+    This object represents a service message about a video chat scheduled in the chat.
+    Telegram Documentation: https://core.telegram.org/bots/api#videochatscheduled
+    :param start_date: Point in time (Unix timestamp) when the video chat is supposed to be started by a chat
+        administrator
+    :type start_date: :obj:`int`
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.VideoChatScheduled`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string, dict_copy=False)
+        return cls(**obj)
+
+    def __init__(self, start_date, **kwargs):
+        self.start_date: int = start_date
+
+
+class VoiceChatScheduled(VideoChatScheduled):
+    """
+    Deprecated, use :class:`VideoChatScheduled` instead.
+    """
+    def __init__(self, *args, **kwargs):
+        logger.warning('VoiceChatScheduled is deprecated. Use VideoChatScheduled instead.')
+        super().__init__(*args, **kwargs)
+
+
+class VideoChatEnded(JsonDeserializable):
+    """
+    This object represents a service message about a video chat ended in the chat.
+    Telegram Documentation: https://core.telegram.org/bots/api#videochatended
+    :param duration: Video chat duration in seconds
+    :type duration: :obj:`int`
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.VideoChatEnded`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string, dict_copy=False)
+        return cls(**obj)
+
+    def __init__(self, duration, **kwargs):
+        self.duration: int = duration
+
+
+class VoiceChatEnded(VideoChatEnded):
+    """
+    Deprecated, use :class:`VideoChatEnded` instead.
+    """
+    def __init__(self, *args, **kwargs):
+        logger.warning('VoiceChatEnded is deprecated. Use VideoChatEnded instead.')
+        super().__init__(*args, **kwargs)
+
+
+class VideoChatParticipantsInvited(JsonDeserializable):
+    """
+    This object represents a service message about new members invited to a video chat.
+    Telegram Documentation: https://core.telegram.org/bots/api#videochatparticipantsinvited
+    :param users: New members that were invited to the video chat
+    :type users: :obj:`list` of :class:`telebot.types.User`
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.VideoChatParticipantsInvited`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        if 'users' in obj:
+            obj['users'] = [User.de_json(u) for u in obj['users']]
+        return cls(**obj)
+
+    def __init__(self, users=None, **kwargs):
+        self.users: List[User] = users
+
+
+class VoiceChatParticipantsInvited(VideoChatParticipantsInvited):
+    """
+    Deprecated, use :class:`VideoChatParticipantsInvited` instead.
+    """
+    def __init__(self, *args, **kwargs):
+        logger.warning('VoiceChatParticipantsInvited is deprecated. Use VideoChatParticipantsInvited instead.')
+        super().__init__(*args, **kwargs)
+
+
 class Message(JsonDeserializable):
     @classmethod
     def de_json(cls, json_string):
@@ -356,6 +460,22 @@ class Message(JsonDeserializable):
         if 'successful_payment' in obj:
             opts['successful_payment'] = SuccessfulPayment.de_json(obj['successful_payment'])
             content_type = 'successful_payment'
+        if 'video_chat_scheduled' in obj:
+            opts['video_chat_scheduled'] = VideoChatScheduled.de_json(obj['video_chat_scheduled'])
+            opts['voice_chat_scheduled'] = opts['video_chat_scheduled']  # deprecated, for backward compatibility
+            content_type = 'video_chat_scheduled'
+        if 'video_chat_started' in obj:
+            opts['video_chat_started'] = VideoChatStarted.de_json(obj['video_chat_started'])
+            opts['voice_chat_started'] = opts['video_chat_started']  # deprecated, for backward compatibility
+            content_type = 'video_chat_started'
+        if 'video_chat_ended' in obj:
+            opts['video_chat_ended'] = VideoChatEnded.de_json(obj['video_chat_ended'])
+            opts['voice_chat_ended'] = opts['video_chat_ended']  # deprecated, for backward compatibility
+            content_type = 'video_chat_ended'
+        if 'video_chat_participants_invited' in obj:
+            opts['video_chat_participants_invited'] = VideoChatParticipantsInvited.de_json(obj['video_chat_participants_invited'])
+            opts['voice_chat_participants_invited'] = opts['video_chat_participants_invited']  # deprecated, for backward compatibility
+            content_type = 'video_chat_participants_invited'
         return cls(message_id, from_user, date, chat, content_type, opts)
 
     @classmethod
