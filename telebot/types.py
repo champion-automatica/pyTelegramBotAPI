@@ -539,6 +539,10 @@ class Message(JsonDeserializable):
         self.pinned_message = None
         self.invoice = None
         self.successful_payment = None
+        self.video_chat_scheduled = None
+        self.video_chat_started = None
+        self.video_chat_ended = None
+        self.video_chat_participants_invited = None
         for key in options:
             setattr(self, key, options[key])
 
