@@ -464,6 +464,10 @@ class Message(JsonDeserializable):
             opts['video_chat_scheduled'] = VideoChatScheduled.de_json(obj['video_chat_scheduled'])
             opts['voice_chat_scheduled'] = opts['video_chat_scheduled']  # deprecated, for backward compatibility
             content_type = 'video_chat_scheduled'
+        if 'voice_chat_scheduled' in obj:
+            opts['video_chat_scheduled'] = VideoChatScheduled.de_json(obj['voice_chat_scheduled'])
+            opts['voice_chat_scheduled'] = opts['video_chat_scheduled']  # deprecated, for backward compatibility
+            content_type = 'video_chat_scheduled'
         if 'video_chat_started' in obj:
             opts['video_chat_started'] = VideoChatStarted.de_json(obj['video_chat_started'])
             opts['voice_chat_started'] = opts['video_chat_started']  # deprecated, for backward compatibility
