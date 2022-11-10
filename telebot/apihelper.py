@@ -413,27 +413,35 @@ def restrict_chat_member(token, chat_id, user_id, until_date=None, can_send_mess
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
-def promote_chat_member(token, chat_id, user_id, can_change_info=None, can_post_messages=None,
-                        can_edit_messages=None, can_delete_messages=None, can_invite_users=None,
-                        can_restrict_members=None, can_pin_messages=None, can_promote_members=None, base_url=None):
+def promote_chat_member(
+        token, chat_id, user_id, can_change_info=None, can_post_messages=None,
+        can_edit_messages=None, can_delete_messages=None, can_invite_users=None,
+        can_restrict_members=None, can_pin_messages=None, can_promote_members=None,
+        is_anonymous=None, can_manage_chat=None, can_manage_video_chats=None, base_url=None):
     method_url = 'promoteChatMember'
     payload = {'chat_id': chat_id, 'user_id': user_id}
-    if can_change_info:
+    if can_change_info is not None:
         payload['can_change_info'] = can_change_info
-    if can_post_messages:
+    if can_post_messages is not None:
         payload['can_post_messages'] = can_post_messages
-    if can_edit_messages:
+    if can_edit_messages is not None:
         payload['can_edit_messages'] = can_edit_messages
-    if can_delete_messages:
+    if can_delete_messages is not None:
         payload['can_delete_messages'] = can_delete_messages
-    if can_invite_users:
+    if can_invite_users is not None:
         payload['can_invite_users'] = can_invite_users
-    if can_restrict_members:
+    if can_restrict_members is not None:
         payload['can_restrict_members'] = can_restrict_members
-    if can_pin_messages:
+    if can_pin_messages is not None:
         payload['can_pin_messages'] = can_pin_messages
-    if can_promote_members:
+    if can_promote_members is not None:
         payload['can_promote_members'] = can_promote_members
+    if is_anonymous is not None:
+        payload['is_anonymous'] = is_anonymous
+    if can_manage_chat is not None:
+        payload['can_manage_chat'] = can_manage_chat
+    if can_manage_video_chats is not None:
+        payload['can_manage_video_chats'] = can_manage_video_chats
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 

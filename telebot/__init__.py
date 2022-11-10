@@ -720,32 +720,73 @@ class TeleBot:
                                               can_send_media_messages, can_send_other_messages,
                                               can_add_web_page_previews, base_url=self.api_url)
 
-    def promote_chat_member(self, chat_id, user_id, can_change_info=None, can_post_messages=None,
-                            can_edit_messages=None, can_delete_messages=None, can_invite_users=None,
-                            can_restrict_members=None, can_pin_messages=None, can_promote_members=None):
+    def promote_chat_member(
+            self, chat_id: Union[int, str], user_id: int,
+            can_change_info: Optional[bool]=None,
+            can_post_messages: Optional[bool]=None,
+            can_edit_messages: Optional[bool]=None,
+            can_delete_messages: Optional[bool]=None,
+            can_invite_users: Optional[bool]=None,
+            can_restrict_members: Optional[bool]=None,
+            can_pin_messages: Optional[bool]=None,
+            can_promote_members: Optional[bool]=None,
+            is_anonymous: Optional[bool]=None,
+            can_manage_chat: Optional[bool]=None,
+            can_manage_video_chats: Optional[bool]=None,
+            can_manage_voice_chats: Optional[bool]=None) -> bool:
         """
         Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator
         in the chat for this to work and must have the appropriate admin rights.
-        Pass False for all boolean parameters to demote a user. Returns True on success.
+        Pass False for all boolean parameters to demote a user.
+        Telegram documentation: https://core.telegram.org/bots/api#promotechatmember
         :param chat_id: Unique identifier for the target chat or username of the target channel (
             in the format @channelusername)
-        :param user_id: Int : Unique identifier of the target user
-        :param can_change_info: Bool: Pass True, if the administrator can change chat title, photo and other settings
-        :param can_post_messages: Bool : Pass True, if the administrator can create channel posts, channels only
-        :param can_edit_messages: Bool : Pass True, if the administrator can edit messages of other users, channels only
-        :param can_delete_messages: Bool : Pass True, if the administrator can delete messages of other users
-        :param can_invite_users: Bool : Pass True, if the administrator can invite new users to the chat
-        :param can_restrict_members: Bool: Pass True, if the administrator can restrict, ban or unban chat members
-        :param can_pin_messages: Bool: Pass True, if the administrator can pin messages, supergroups only
-        :param can_promote_members: Bool: Pass True, if the administrator can add new administrators with a subset
+        :type chat_id: :obj:`int` or :obj:`str`
+        :param user_id: Unique identifier of the target user
+        :type user_id: :obj:`int`
+        :param can_change_info: Pass True, if the administrator can change chat title, photo and other settings
+        :type can_change_info: :obj:`bool`
+        :param can_post_messages: Pass True, if the administrator can create channel posts, channels only
+        :type can_post_messages: :obj:`bool`
+        :param can_edit_messages: Pass True, if the administrator can edit messages of other users, channels only
+        :type can_edit_messages: :obj:`bool`
+        :param can_delete_messages: Pass True, if the administrator can delete messages of other users
+        :type can_delete_messages: :obj:`bool`
+        :param can_invite_users: Pass True, if the administrator can invite new users to the chat
+        :type can_invite_users: :obj:`bool`
+        :param can_restrict_members: Pass True, if the administrator can restrict, ban or unban chat members
+        :type can_restrict_members: :obj:`bool`
+        :param can_pin_messages: Pass True, if the administrator can pin messages, supergroups only
+        :type can_pin_messages: :obj:`bool`
+        :param can_promote_members: Pass True, if the administrator can add new administrators with a subset
             of his own privileges or demote administrators that he has promoted, directly or indirectly
             (promoted by administrators that were appointed by him)
-        :return:
+        :type can_promote_members: :obj:`bool`
+        :param is_anonymous: Pass True, if the administrator's presence in the chat is hidden
+        :type is_anonymous: :obj:`bool`
+        :param can_manage_chat: Pass True, if the administrator can access the chat event log, chat statistics,
+            message statistics in channels, see channel members,
+            see anonymous administrators in supergroups and ignore slow mode.
+            Implied by any other administrator privilege
+        :type can_manage_chat: :obj:`bool`
+        :param can_manage_video_chats: Pass True, if the administrator can manage voice chats
+            For now, bots can use this privilege only for passing to other administrators.
+        :type can_manage_video_chats: :obj:`bool`
+        :param can_manage_voice_chats: Deprecated, use can_manage_video_chats.
+        :type can_manage_voice_chats: :obj:`bool`
+        :return: True on success.
+        :rtype: :obj:`bool`
         """
-        return apihelper.promote_chat_member(self.token, chat_id, user_id, can_change_info, can_post_messages,
-                                             can_edit_messages, can_delete_messages, can_invite_users,
-                                             can_restrict_members, can_pin_messages, can_promote_members,
-                                             base_url=self.api_url)
+        if can_manage_voice_chats is not None:
+            logger.warning("promote_chat_member: can_manage_voice_chats parameter is deprecated. Use can_manage_video_chats instead.")
+            if can_manage_video_chats is None:
+                can_manage_video_chats = can_manage_voice_chats
+
+        return apihelper.promote_chat_member(
+            self.token, chat_id, user_id, can_change_info, can_post_messages,
+            can_edit_messages, can_delete_messages, can_invite_users,
+            can_restrict_members, can_pin_messages, can_promote_members,
+            is_anonymous, can_manage_chat, can_manage_video_chats, base_url=self.api_url)
 
     def export_chat_invite_link(self, chat_id):
         """
