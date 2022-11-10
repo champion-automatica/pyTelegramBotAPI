@@ -6,6 +6,7 @@ import re
 import sys
 import threading
 import time
+from typing import Optional, Union
 
 import six
 
