@@ -1045,13 +1045,16 @@ class ChatMember(JsonDeserializable):
         can_send_media_messages = obj.get('can_send_media_messages')
         can_send_other_messages = obj.get('can_send_other_messages')
         can_add_web_page_previews = obj.get('can_add_web_page_previews')
+        can_manage_video_chats = obj.get('can_manage_video_chats')
         return cls(user, status, until_date, can_be_edited, can_change_info, can_post_messages, can_edit_messages,
                    can_delete_messages, can_invite_users, can_restrict_members, can_pin_messages, can_promote_members,
-                   can_send_messages, can_send_media_messages, can_send_other_messages, can_add_web_page_previews)
+                   can_send_messages, can_send_media_messages, can_send_other_messages, can_add_web_page_previews,
+                   can_manage_video_chats=can_manage_video_chats)
 
     def __init__(self, user, status, until_date, can_be_edited, can_change_info, can_post_messages, can_edit_messages,
                  can_delete_messages, can_invite_users, can_restrict_members, can_pin_messages, can_promote_members,
-                 can_send_messages, can_send_media_messages, can_send_other_messages, can_add_web_page_previews):
+                 can_send_messages, can_send_media_messages, can_send_other_messages, can_add_web_page_previews,
+                 can_manage_video_chats=None):
         self.user = user
         self.status = status
         self.until_date = until_date
@@ -1068,6 +1071,7 @@ class ChatMember(JsonDeserializable):
         self.can_send_media_messages = can_send_media_messages
         self.can_send_other_messages = can_send_other_messages
         self.can_add_web_page_previews = can_add_web_page_previews
+        self.can_manage_video_chats = can_manage_video_chats
 
 
 # InlineQuery
