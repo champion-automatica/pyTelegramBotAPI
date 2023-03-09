@@ -142,16 +142,6 @@ class AsyncTask:
             return self.result
 
 
-def async():
-    def decorator(fn):
-        def wrapper(*args, **kwargs):
-            return AsyncTask(fn, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
 def is_string(var):
     return isinstance(var, string_types)
 
