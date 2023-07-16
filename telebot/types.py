@@ -99,6 +99,8 @@ class Update(JsonDeserializable):
         callback_query = None
         shipping_query = None
         pre_checkout_query = None
+        poll = None
+        poll_answer = None
         if 'message' in obj:
             message = Message.de_json(obj['message'])
         if 'edited_message' in obj:
@@ -117,11 +119,15 @@ class Update(JsonDeserializable):
             shipping_query = ShippingQuery.de_json(obj['shipping_query'])
         if 'pre_checkout_query' in obj:
             pre_checkout_query = PreCheckoutQuery.de_json(obj['pre_checkout_query'])
+        if 'poll' in obj:
+            poll = Poll.de_json(obj.get('poll'))
+        if 'poll_answer' in obj:
+            poll_answer = PollAnswer.de_json(obj.get('poll_answer'))
         return cls(update_id, message, edited_message, channel_post, edited_channel_post, inline_query,
-                   chosen_inline_result, callback_query, shipping_query, pre_checkout_query)
+                   chosen_inline_result, callback_query, shipping_query, pre_checkout_query, poll, poll_answer)
 
     def __init__(self, update_id, message, edited_message, channel_post, edited_channel_post, inline_query,
-                 chosen_inline_result, callback_query, shipping_query, pre_checkout_query):
+                 chosen_inline_result, callback_query, shipping_query, pre_checkout_query, poll, poll_answer):
         self.update_id = update_id
         self.edited_message = edited_message
         self.message = message
@@ -133,6 +139,8 @@ class Update(JsonDeserializable):
         self.callback_query = callback_query
         self.shipping_query = shipping_query
         self.pre_checkout_query = pre_checkout_query
+        self.poll = poll
+        self.poll_answer = poll_answer
 
 
 class WebhookInfo(JsonDeserializable):
@@ -244,6 +252,179 @@ class Chat(JsonDeserializable):
         self.can_set_sticker_set = can_set_sticker_set
 
 
+class PollOption(JsonDeserializable):
+    """
+    This object contains information about one answer option in a poll.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#polloption
+
+    :param text: Option text, 1-100 characters
+    :type text: :obj:`str`
+
+    :param voter_count: Number of users that voted for this option
+    :type voter_count: :obj:`int`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.PollOption`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if (json_string is None): return None
+        obj = cls.check_json(json_string, dict_copy=False)
+        return cls(**obj)
+
+    def __init__(self, text, voter_count = 0, **kwargs):
+        self.text: str = text
+        self.voter_count: int = voter_count
+    # Converted in _convert_poll_options
+    # def to_json(self):
+    #     # send_poll Option is a simple string: https://core.telegram.org/bots/api#sendpoll
+    #     return json.dumps(self.text)
+
+
+class Poll(JsonDeserializable):
+    """
+    This object contains information about a poll.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#poll
+
+    :param id: Unique poll identifier
+    :type id: :obj:`str`
+
+    :param question: Poll question, 1-300 characters
+    :type question: :obj:`str`
+
+    :param options: List of poll options
+    :type options: :obj:`list` of :class:`telebot.types.PollOption`
+
+    :param total_voter_count: Total number of users that voted in the poll
+    :type total_voter_count: :obj:`int`
+
+    :param is_closed: True, if the poll is closed
+    :type is_closed: :obj:`bool`
+
+    :param is_anonymous: True, if the poll is anonymous
+    :type is_anonymous: :obj:`bool`
+
+    :param type: Poll type, currently can be “regular” or “quiz”
+    :type type: :obj:`str`
+
+    :param allows_multiple_answers: True, if the poll allows multiple answers
+    :type allows_multiple_answers: :obj:`bool`
+
+    :param correct_option_id: Optional. 0-based identifier of the correct answer option. Available only for polls in
+        the quiz mode, which are closed, or was sent (not forwarded) by the bot or to the private chat with the bot.
+    :type correct_option_id: :obj:`int`
+
+    :param explanation: Optional. Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a
+        quiz-style poll, 0-200 characters
+    :type explanation: :obj:`str`
+
+    :param explanation_entities: Optional. Special entities like usernames, URLs, bot commands, etc. that appear in
+        the explanation
+    :type explanation_entities: :obj:`list` of :class:`telebot.types.MessageEntity`
+
+    :param open_period: Optional. Amount of time in seconds the poll will be active after creation
+    :type open_period: :obj:`int`
+
+    :param close_date: Optional. Point in time (Unix timestamp) when the poll will be automatically closed
+    :type close_date: :obj:`int`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.Poll`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if (json_string is None): return None
+        obj = cls.check_json(json_string)
+        obj['poll_id'] = obj.pop('id')
+        options = []
+        for opt in obj['options']:
+            options.append(PollOption.de_json(opt))
+        obj['options'] = options or None
+        if 'explanation_entities' in obj:
+            obj['explanation_entities'] = Message.parse_entities(obj['explanation_entities'])
+        return cls(**obj)
+
+    # noinspection PyShadowingBuiltins
+    def __init__(
+            self,
+            question, options,
+            poll_id=None, total_voter_count=None, is_closed=None, is_anonymous=None, type=None,
+            allows_multiple_answers=None, correct_option_id=None, explanation=None, explanation_entities=None,
+            open_period=None, close_date=None, poll_type=None, **kwargs):
+        self.id: str = poll_id
+        self.question: str = question
+        self.options: List[PollOption] = options
+        self.total_voter_count: int = total_voter_count
+        self.is_closed: bool = is_closed
+        self.is_anonymous: bool = is_anonymous
+        self.type: str = type
+        if poll_type is not None:
+            # Wrong param name backward compatibility
+            logger.warning("Poll: poll_type parameter is deprecated. Use type instead.")
+            if type is None:
+                self.type: str = poll_type
+        self.allows_multiple_answers: bool = allows_multiple_answers
+        self.correct_option_id: int = correct_option_id
+        self.explanation: str = explanation
+        self.explanation_entities: List[MessageEntity] = explanation_entities
+        self.open_period: int = open_period
+        self.close_date: int = close_date
+
+    def add(self, option):
+        """
+        Add an option to the poll.
+
+        :param option: Option to add
+        :type option: :class:`telebot.types.PollOption` or :obj:`str`
+        """
+        if type(option) is PollOption:
+            self.options.append(option)
+        else:
+            self.options.append(PollOption(option))
+
+
+class PollAnswer(JsonSerializable, JsonDeserializable, Dictionaryable):
+    """
+    This object represents an answer of a user in a non-anonymous poll.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#pollanswer
+
+    :param poll_id: Unique poll identifier
+    :type poll_id: :obj:`str`
+
+    :param user: The user, who changed the answer to the poll
+    :type user: :class:`telebot.types.User`
+
+    :param option_ids: 0-based identifiers of answer options, chosen by the user. May be empty if the user retracted
+        their vote.
+    :type option_ids: :obj:`list` of :obj:`int`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.PollAnswer`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if (json_string is None): return None
+        obj = cls.check_json(json_string)
+        obj['user'] = User.de_json(obj['user'])
+        return cls(**obj)
+
+    def __init__(self, poll_id, user, option_ids, **kwargs):
+        self.poll_id: str = poll_id
+        self.user: User = user
+        self.option_ids: List[int] = option_ids
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+    def to_dict(self):
+        return {'poll_id': self.poll_id,
+                'user': self.user.to_dict(),
+                'option_ids': self.option_ids}
+
+
 class VideoChatStarted(JsonDeserializable):
     """
     This object represents a service message about a video chat started in the chat. Currently holds no information.
@@ -351,6 +532,148 @@ class VoiceChatParticipantsInvited(VideoChatParticipantsInvited):
     def __init__(self, *args, **kwargs):
         logger.warning('VoiceChatParticipantsInvited is deprecated. Use VideoChatParticipantsInvited instead.')
         super().__init__(*args, **kwargs)
+
+
+class MenuButton(JsonDeserializable, JsonSerializable, Dictionaryable):
+    """
+    This object describes the bot's menu button in a private chat. It should be one of
+
+    * :class:`MenuButtonCommands`
+    * :class:`MenuButtonWebApp`
+    * :class:`MenuButtonDefault`
+
+    If a menu button other than MenuButtonDefault is set for a private chat, then it is applied
+    in the chat. Otherwise the default menu button is applied. By default, the menu button opens the list of bot commands.
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        map = {
+            'commands': MenuButtonCommands,
+            'web_app': MenuButtonWebApp,
+            'default': MenuButtonDefault
+        }
+        return map[obj['type']](**obj)
+
+    def to_json(self):
+        """
+        :meta private:
+        """
+        raise NotImplementedError
+
+    def to_dict(self):
+        """
+        :meta private:
+        """
+        raise NotImplementedError
+
+
+class MenuButtonCommands(MenuButton):
+    """
+    Represents a menu button, which opens the bot's list of commands.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#menubuttoncommands
+
+    :param type: Type of the button, must be commands
+    :type type: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.MenuButtonCommands`
+    """
+
+    def __init__(self, type):
+        self.type = type
+
+    def to_dict(self):
+        return {'type': self.type}
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+
+class MenuButtonWebApp(MenuButton):
+    """
+    Represents a menu button, which launches a Web App.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#menubuttonwebapp
+
+    :param type: Type of the button, must be web_app
+    :type type: :obj:`str`
+
+    :param text: Text on the button
+    :type text: :obj:`str`
+
+    :param web_app: Description of the Web App that will be launched when the user presses the button. The Web App will be
+        able to send an arbitrary message on behalf of the user using the method answerWebAppQuery.
+    :type web_app: :class:`telebot.types.WebAppInfo`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.MenuButtonWebApp`
+    """
+
+    def __init__(self, type, text, web_app):
+        self.type: str = type
+        self.text: str = text
+        self.web_app: WebAppInfo = web_app
+
+    def to_dict(self):
+        return {'type': self.type, 'text': self.text, 'web_app': self.web_app.to_dict()}
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+
+class MenuButtonDefault(MenuButton):
+    """
+    Describes that no specific value for the menu button was set.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#menubuttondefault
+
+    :param type: Type of the button, must be default
+    :type type: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.MenuButtonDefault`
+    """
+    def __init__(self, type):
+        self.type: str = type
+
+    def to_dict(self):
+        return {'type': self.type}
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+
+class WebAppData(JsonDeserializable, Dictionaryable):
+    """
+    Describes data sent from a Web App to the bot.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#webappdata
+
+    :param data: The data. Be aware that a bad client can send arbitrary data in this field.
+    :type data: :obj:`str`
+
+    :param button_text: Text of the web_app keyboard button from which the Web App was opened. Be aware that a bad client
+        can send arbitrary data in this field.
+    :type button_text: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.WebAppData`
+    """
+
+    def __init__(self, data, button_text):
+        self.data = data
+        self.button_text = button_text
+    def to_dict(self):
+        return {'data': self.data, 'button_text': self.button_text}
+
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        return cls(**obj)
 
 
 class Message(JsonDeserializable):
@@ -480,6 +803,12 @@ class Message(JsonDeserializable):
             opts['video_chat_participants_invited'] = VideoChatParticipantsInvited.de_json(obj['video_chat_participants_invited'])
             opts['voice_chat_participants_invited'] = opts['video_chat_participants_invited']  # deprecated, for backward compatibility
             content_type = 'video_chat_participants_invited'
+        if 'poll' in obj:
+            opts['poll'] = Poll.de_json(obj['poll'])
+            content_type = 'poll'
+        if 'web_app_data' in obj:
+            opts['web_app_data'] = WebAppData.de_json(obj['web_app_data'])
+            content_type = 'web_app_data'
         return cls(message_id, from_user, date, chat, content_type, opts)
 
     @classmethod
@@ -884,11 +1213,59 @@ class ReplyKeyboardMarkup(JsonSerializable):
         return json.dumps(json_dict)
 
 
+class WebAppInfo(JsonDeserializable, Dictionaryable):
+    """
+    Describes a Web App.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#webappinfo
+
+    :param url: An HTTPS URL of a Web App to be opened with additional data as specified in Initializing Web Apps
+    :type url: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.WebAppInfo`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        return cls(**obj)
+
+    def __init__(self, url, **kwargs):
+        self.url: str = url
+
+    def to_dict(self):
+        return {'url': self.url}
+
+
+class KeyboardButtonPollType(Dictionaryable):
+    """
+    This object represents type of a poll, which is allowed to be created and sent when the corresponding button is pressed.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#keyboardbuttonpolltype
+
+    :param type: Optional. If quiz is passed, the user will be allowed to create only polls in the quiz mode. If regular is
+        passed, only regular polls will be allowed. Otherwise, the user will be allowed to create a poll of any type.
+    :type type: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.KeyboardButtonPollType`
+    """
+    def __init__(self, type=''):
+        self.type: str = type
+
+    def to_dict(self):
+        return {'type': self.type}
+
+
 class KeyboardButton(Dictionaryable, JsonSerializable):
-    def __init__(self, text, request_contact=None, request_location=None):
+    def __init__(self, text, request_contact=None, request_location=None,
+                 request_poll: Optional[KeyboardButtonPollType]=None, web_app: Optional[WebAppInfo]=None):
         self.text = text
         self.request_contact = request_contact
         self.request_location = request_location
+        self.request_poll: KeyboardButtonPollType = request_poll
+        self.web_app: WebAppInfo = web_app
 
     def to_json(self):
         return json.dumps(self.to_dic())
@@ -899,6 +1276,10 @@ class KeyboardButton(Dictionaryable, JsonSerializable):
             json_dic['request_contact'] = self.request_contact
         if self.request_location:
             json_dic['request_location'] = self.request_location
+        if self.request_poll is not None:
+            json_dic['request_poll'] = self.request_poll.to_dict()
+        if self.web_app is not None:
+            json_dic['web_app'] = self.web_app.to_dict()
         return json_dic
 
 
@@ -956,16 +1337,121 @@ class InlineKeyboardMarkup(Dictionaryable, JsonSerializable):
         return json_dict
 
 
-class InlineKeyboardButton(JsonSerializable):
-    def __init__(self, text, url=None, callback_data=None, switch_inline_query=None,
+class SwitchInlineQueryChosenChat(JsonDeserializable, Dictionaryable, JsonSerializable):
+    """
+    Represents an inline button that switches the current user to inline mode in a chosen chat,
+    with an optional default inline query.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#inlinekeyboardbutton
+
+    :param query: Optional. The default inline query to be inserted in the input field.
+                  If left empty, only the bot's username will be inserted
+    :type query: :obj:`str`
+
+    :param allow_user_chats: Optional. True, if private chats with users can be chosen
+    :type allow_user_chats: :obj:`bool`
+
+    :param allow_bot_chats: Optional. True, if private chats with bots can be chosen
+    :type allow_bot_chats: :obj:`bool`
+
+    :param allow_group_chats: Optional. True, if group and supergroup chats can be chosen
+    :type allow_group_chats: :obj:`bool`
+
+    :param allow_channel_chats: Optional. True, if channel chats can be chosen
+    :type allow_channel_chats: :obj:`bool`
+
+    :return: Instance of the class
+    :rtype: :class:`SwitchInlineQueryChosenChat`
+    """
+
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None:
+            return None
+        obj = cls.check_json(json_string)
+        return cls(**obj)
+
+    def __init__(self, query=None, allow_user_chats=None, allow_bot_chats=None, allow_group_chats=None,
+                 allow_channel_chats=None):
+        self.query: str = query
+        self.allow_user_chats: bool = allow_user_chats
+        self.allow_bot_chats: bool = allow_bot_chats
+        self.allow_group_chats: bool = allow_group_chats
+        self.allow_channel_chats: bool = allow_channel_chats
+
+    def to_dict(self):
+        json_dict = {}
+
+        if self.query is not None:
+            json_dict['query'] = self.query
+        if self.allow_user_chats is not None:
+            json_dict['allow_user_chats'] = self.allow_user_chats
+        if self.allow_bot_chats is not None:
+            json_dict['allow_bot_chats'] = self.allow_bot_chats
+        if self.allow_group_chats is not None:
+            json_dict['allow_group_chats'] = self.allow_group_chats
+        if self.allow_channel_chats is not None:
+            json_dict['allow_channel_chats'] = self.allow_channel_chats
+
+        return json_dict
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+
+class SentWebAppMessage(JsonDeserializable, Dictionaryable):
+    """
+    Describes an inline message sent by a Web App on behalf of a user.
+
+    Telegram Documentation: https://core.telegram.org/bots/api#sentwebappmessage
+
+    :param inline_message_id: Optional. Identifier of the sent inline message. Available only if there is an inline
+        keyboard attached to the message.
+    :type inline_message_id: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`telebot.types.SentWebAppMessage`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        return cls(**obj)
+
+    def __init__(self, inline_message_id=None):
+        self.inline_message_id = inline_message_id
+
+    def to_dict(self):
+        json_dict = {}
+        if self.inline_message_id:
+            json_dict['inline_message_id'] = self.inline_message_id
+        return json_dict
+
+
+class InlineKeyboardButton(Dictionaryable, JsonSerializable, JsonDeserializable):
+    def __init__(self, text, url=None, callback_data=None, web_app=None, switch_inline_query=None,
                  switch_inline_query_current_chat=None, callback_game=None, pay=None):
         self.text = text
         self.url = url
         self.callback_data = callback_data
+        self.web_app: WebAppInfo = web_app
         self.switch_inline_query = switch_inline_query
         self.switch_inline_query_current_chat = switch_inline_query_current_chat
         self.callback_game = callback_game
         self.pay = pay
+
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        if 'web_app' in obj:
+            obj['web_app'] = WebAppInfo.de_json(obj.get('web_app'))
+        if 'switch_inline_query_chosen_chat' in obj:
+            obj['switch_inline_query_chosen_chat'] = SwitchInlineQueryChosenChat.de_json(
+                obj.get('switch_inline_query_chosen_chat')
+            )
+
+        return cls(**obj)
 
     def to_json(self):
         return json.dumps(self.to_dic())
@@ -976,6 +1462,8 @@ class InlineKeyboardButton(JsonSerializable):
             json_dic['url'] = self.url
         if self.callback_data:
             json_dic['callback_data'] = self.callback_data
+        if self.web_app:
+            json_dict['web_app'] = self.web_app.to_dict()
         if self.switch_inline_query is not None:
             json_dic['switch_inline_query'] = self.switch_inline_query
         if self.switch_inline_query_current_chat is not None:
@@ -984,6 +1472,8 @@ class InlineKeyboardButton(JsonSerializable):
             json_dic['callback_game'] = self.callback_game
         if self.pay is not None:
             json_dic['pay'] = self.pay
+        if 'web_app' in obj:
+            obj['web_app'] = WebAppInfo.de_json(obj.get('web_app'))
         return json_dic
 
 
@@ -1654,6 +2144,70 @@ class BaseInlineQueryResultCached(JsonSerializable):
         return json.dumps(json_dict)
 
 
+class InlineQueryResultBase(BaseInlineQueryResultCached, Dictionaryable, JsonSerializable):
+    """
+    This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
+
+    * :class:`InlineQueryResultCachedAudio`
+    * :class:`InlineQueryResultCachedDocument`
+    * :class:`InlineQueryResultCachedGif`
+    * :class:`InlineQueryResultCachedMpeg4Gif`
+    * :class:`InlineQueryResultCachedPhoto`
+    * :class:`InlineQueryResultCachedSticker`
+    * :class:`InlineQueryResultCachedVideo`
+    * :class:`InlineQueryResultCachedVoice`
+    * :class:`InlineQueryResultArticle`
+    * :class:`InlineQueryResultAudio`
+    * :class:`InlineQueryResultContact`
+    * :class:`InlineQueryResultGame`
+    * :class:`InlineQueryResultDocument`
+    * :class:`InlineQueryResultGif`
+    * :class:`InlineQueryResultLocation`
+    * :class:`InlineQueryResultMpeg4Gif`
+    * :class:`InlineQueryResultPhoto`
+    * :class:`InlineQueryResultVenue`
+    * :class:`InlineQueryResultVideo`
+    * :class:`InlineQueryResultVoice`
+
+    Telegram Documentation: https://core.telegram.org/bots/api#inlinequeryresult
+    """
+    # noinspection PyShadowingBuiltins
+    def __init__(self, type, id, title = None, caption = None, input_message_content = None,
+                 reply_markup = None, caption_entities = None, parse_mode = None):
+        super().__init__()
+        self.type = type
+        self.id = id
+        self.title = title
+        self.caption = caption
+        self.input_message_content = input_message_content
+        self.reply_markup = reply_markup
+        self.caption_entities = caption_entities
+        self.parse_mode = parse_mode
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+    def to_dict(self):
+        json_dict = {
+            'type': self.type,
+            'id': self.id
+        }
+        if self.title:
+            json_dict['title'] = self.title
+        if self.caption:
+            json_dict['caption'] = self.caption
+        if self.input_message_content:
+            json_dict['input_message_content'] = self.input_message_content.to_dict()
+        if self.reply_markup:
+            json_dict['reply_markup'] = self.reply_markup.to_dict()
+        if self.caption_entities:
+            json_dict['caption_entities'] = MessageEntity.to_list_of_dicts(self.caption_entities)
+        if self.parse_mode:
+            json_dict['parse_mode'] = self.parse_mode
+        return json_dict
+
+
+
 class InlineQueryResultCachedPhoto(BaseInlineQueryResultCached):
     def __init__(self, id, photo_file_id, title=None, description=None, caption=None, reply_markup=None,
                  input_message_content=None):
@@ -2091,3 +2645,73 @@ class MaskPosition(JsonDeserializable, JsonSerializable):
 
     def to_dic(self):
         return {'point': self.point, 'x_shift': self.x_shift, 'y_shift': self.y_shift, 'scale': self.scale}
+
+
+class WriteAccessAllowed(JsonDeserializable):
+    """
+    This object represents a service message about a user allowed to post messages in the chat.
+    Currently holds no information.
+
+    Telegram documentation: https://core.telegram.org/bots/api#writeaccessallowed
+
+    :param web_app_name: Optional. Name of the Web App which was launched from a link
+    :type web_app_name: :obj:`str`
+    """
+    @classmethod
+    def de_json(cls, json_string):
+        if json_string is None: return None
+        obj = cls.check_json(json_string)
+        return cls(**obj)
+
+
+    def __init__(self, web_app_name: str) -> None:
+        self.web_app_name: str = web_app_name
+
+
+class InlineQueryResultsButton(JsonSerializable, Dictionaryable):
+    """
+    This object represents a button to be shown above inline query results.
+    You must use exactly one of the optional fields.
+
+    Telegram documentation: https://core.telegram.org/bots/api#inlinequeryresultsbutton
+
+    :param text: Label text on the button
+    :type text: :obj:`str`
+
+    :param web_app: Optional. Description of the Web App that will be launched when the user presses the button.
+        The Web App will be able to switch back to the inline mode using the method web_app_switch_inline_query inside the Web App.
+    :type web_app: :class:`telebot.types.WebAppInfo`
+
+    :param start_parameter: Optional. Deep-linking parameter for the /start message sent to the bot when a user presses the button.
+        1-64 characters, only A-Z, a-z, 0-9, _ and - are allowed.
+        Example: An inline bot that sends YouTube videos can ask the user to connect the bot to their YouTube account to adapt search
+        results accordingly. To do this, it displays a 'Connect your YouTube account' button above the results, or even before showing
+        any. The user presses the button, switches to a private chat with the bot and, in doing so, passes a start parameter that instructs
+        the bot to return an OAuth link. Once done, the bot can offer a switch_inline button so that the user can easily return to the chat
+        where they wanted to use the bot's inline capabilities.
+    :type start_parameter: :obj:`str`
+
+    :return: Instance of the class
+    :rtype: :class:`InlineQueryResultsButton`
+    """
+
+    def __init__(self, text: str, web_app: Optional[WebAppInfo]=None, start_parameter: Optional[str]=None) -> None:
+        self.text: str = text
+        self.web_app: Optional[WebAppInfo] = web_app
+        self.start_parameter: Optional[str] = start_parameter
+
+
+    def to_dict(self) -> dict:
+        json_dict = {
+            'text': self.text
+        }
+
+        if self.web_app is not None:
+            json_dict['web_app'] = self.web_app.to_dict()
+        if self.start_parameter is not None:
+            json_dict['start_parameter'] = self.start_parameter
+
+        return json_dict
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict())

@@ -99,6 +99,8 @@ class TeleBot:
         self.callback_query_handlers = []
         self.shipping_query_handlers = []
         self.pre_checkout_query_handlers = []
+        self.poll_handlers = []
+        self.poll_answer_handlers = []
 
         self.threaded = threaded
         if self.threaded:
@@ -180,6 +182,8 @@ class TeleBot:
         new_callback_querys = []
         new_shipping_querys = []
         new_pre_checkout_querys = []
+        new_polls = None
+        new_poll_answers = None
 
         for update in updates:
             if update.update_id > self.last_update_id:
@@ -202,6 +206,12 @@ class TeleBot:
                 new_shipping_querys.append(update.shipping_query)
             if update.pre_checkout_query:
                 new_pre_checkout_querys.append(update.pre_checkout_query)
+            if update.poll:
+                if new_polls is None: new_polls = []
+                new_polls.append(update.poll)
+            if update.poll_answer:
+                if new_poll_answers is None: new_poll_answers = []
+                new_poll_answers.append(update.poll_answer)
 
         logger.debug('Received {0} new updates'.format(len(updates)))
         if len(new_messages) > 0:
@@ -222,6 +232,10 @@ class TeleBot:
             self.process_new_pre_checkout_query(new_pre_checkout_querys)
         if len(new_shipping_querys) > 0:
             self.process_new_shipping_query(new_shipping_querys)
+        if new_polls:
+            self.process_new_poll(new_polls)
+        if new_poll_answers:
+            self.process_new_poll_answer(new_poll_answers)
 
     def process_new_messages(self, new_messages):
         self._append_pre_next_step_handler()
@@ -253,6 +267,18 @@ class TeleBot:
 
     def process_new_pre_checkout_query(self, pre_checkout_querys):
         self._notify_command_handlers(self.pre_checkout_query_handlers, pre_checkout_querys)
+
+    def process_new_poll(self, polls):
+        """
+        :meta private:
+        """
+        self._notify_command_handlers(self.poll_handlers, polls)
+
+    def process_new_poll_answer(self, poll_answers):
+        """
+        :meta private:
+        """
+        self._notify_command_handlers(self.poll_answer_handlers, poll_answers)
 
     def __notify_update(self, new_messages):
         for listener in self.update_listener:
@@ -928,6 +954,139 @@ class TeleBot:
                                         currency, prices, start_parameter, base_url=self.api_url, **kwargs)
         return types.Message.de_json(result)
 
+    # noinspection PyShadowingBuiltins
+    # TODO: rewrite this method like in API
+    def send_poll(
+            self, chat_id: Union[int, str], question: str, options: List[str],
+            is_anonymous: Optional[bool]=None, type: Optional[str]=None,
+            allows_multiple_answers: Optional[bool]=None,
+            correct_option_id: Optional[int]=None,
+            explanation: Optional[str]=None,
+            explanation_parse_mode: Optional[str]=None,
+            open_period: Optional[int]=None,
+            close_date: Optional[Union[int, datetime]]=None,
+            is_closed: Optional[bool]=None,
+            disable_notification: Optional[bool]=False,
+            reply_to_message_id: Optional[int]=None,
+            reply_markup: Optional[REPLY_MARKUP_TYPES]=None,
+            allow_sending_without_reply: Optional[bool]=None,
+            timeout: Optional[int]=None,
+            explanation_entities: Optional[List[types.MessageEntity]]=None,
+            protect_content: Optional[bool]=None,
+            message_thread_id: Optional[int]=None) -> types.Message:
+        """
+        Use this method to send a native poll.
+        On success, the sent Message is returned.
+
+        Telegram documentation: https://core.telegram.org/bots/api#sendpoll
+
+        :param chat_id: Unique identifier for the target chat or username of the target channel
+        :type chat_id: :obj:`int` | :obj:`str`
+
+        :param question: Poll question, 1-300 characters
+        :type question: :obj:`str`
+
+        :param options: A JSON-serialized list of answer options, 2-10 strings 1-100 characters each
+        :type options: :obj:`list` of :obj:`str`
+
+        :param is_anonymous: True, if the poll needs to be anonymous, defaults to True
+        :type is_anonymous: :obj:`bool`
+
+        :param type: Poll type, “quiz” or “regular”, defaults to “regular”
+        :type type: :obj:`str`
+
+        :param allows_multiple_answers: True, if the poll allows multiple answers, ignored for polls in quiz mode, defaults to False
+        :type allows_multiple_answers: :obj:`bool`
+
+        :param correct_option_id: 0-based identifier of the correct answer option. Available only for polls in quiz mode,
+            defaults to None
+        :type correct_option_id: :obj:`int`
+
+        :param explanation: Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a quiz-style poll,
+            0-200 characters with at most 2 line feeds after entities parsing
+        :type explanation: :obj:`str`
+
+        :param explanation_parse_mode: Mode for parsing entities in the explanation. See formatting options for more details.
+        :type explanation_parse_mode: :obj:`str`
+
+        :param open_period: Amount of time in seconds the poll will be active after creation, 5-600. Can't be used together with close_date.
+        :type open_period: :obj:`int`
+
+        :param close_date: Point in time (Unix timestamp) when the poll will be automatically closed.
+        :type close_date: :obj:`int` | :obj:`datetime`
+
+        :param is_closed: Pass True, if the poll needs to be immediately closed. This can be useful for poll preview.
+        :type is_closed: :obj:`bool`
+
+        :param disable_notification: Sends the message silently. Users will receive a notification with no sound.
+        :type disable_notification: :obj:`bool`
+
+        :param reply_to_message_id: If the message is a reply, ID of the original message
+        :type reply_to_message_id: :obj:`int`
+
+        :param allow_sending_without_reply: Pass True, if the poll allows multiple options to be voted simultaneously.
+        :type allow_sending_without_reply: :obj:`bool`
+
+        :param reply_markup: Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard,
+            instructions to remove reply keyboard or to force a reply from the user.
+        :type reply_markup: :obj:`InlineKeyboardMarkup` | :obj:`ReplyKeyboardMarkup` | :obj:`ReplyKeyboardRemove` | :obj:`ForceReply`
+
+        :param timeout: Timeout in seconds for waiting for a response from the user.
+        :type timeout: :obj:`int`
+
+        :param explanation_entities: A JSON-serialized list of special entities that appear in the explanation,
+            which can be specified instead of parse_mode
+        :type explanation_entities: :obj:`list` of :obj:`MessageEntity`
+
+        :param protect_content: Protects the contents of the sent message from forwarding and saving
+        :type protect_content: :obj:`bool`
+
+        :param message_thread_id: The identifier of a message thread, in which the poll will be sent
+        :type message_thread_id: :obj:`int`
+
+        :return: On success, the sent Message is returned.
+        :rtype: :obj:`types.Message`
+        """
+        disable_notification = self.disable_notification if (disable_notification is None) else disable_notification
+        protect_content = self.protect_content if (protect_content is None) else protect_content
+        allow_sending_without_reply = self.allow_sending_without_reply if (allow_sending_without_reply is None) else allow_sending_without_reply
+
+        if isinstance(question, types.Poll):
+            raise RuntimeError("The send_poll signature was changed, please see send_poll function details.")
+
+        explanation_parse_mode = self.parse_mode if (explanation_parse_mode is None) else explanation_parse_mode
+
+        return types.Message.de_json(
+            apihelper.send_poll(
+                self.token, chat_id,
+                question, options,
+                is_anonymous, type, allows_multiple_answers, correct_option_id,
+                explanation, explanation_parse_mode, open_period, close_date, is_closed,
+                disable_notification, reply_to_message_id, allow_sending_without_reply,
+                reply_markup, timeout, explanation_entities, protect_content, message_thread_id))
+
+    def stop_poll(
+            self, chat_id: Union[int, str], message_id: int,
+            reply_markup: Optional[types.InlineKeyboardMarkup]=None) -> types.Poll:
+        """
+        Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned.
+
+        Telegram documentation: https://core.telegram.org/bots/api#stoppoll
+
+        :param chat_id: Unique identifier for the target chat or username of the target channel
+        :type chat_id: :obj:`int` | :obj:`str`
+
+        :param message_id: Identifier of the original message with the poll
+        :type message_id: :obj:`int`
+
+        :param reply_markup: A JSON-serialized object for a new message markup.
+        :type reply_markup: :obj:`InlineKeyboardMarkup`
+
+        :return: On success, the stopped Poll is returned.
+        :rtype: :obj:`types.Poll`
+        """
+        return types.Poll.de_json(apihelper.stop_poll(self.token, chat_id, message_id, reply_markup))
+
     def answer_shipping_query(self, shipping_query_id, ok, shipping_options=None, error_message=None):
         return apihelper.answer_shipping_query(self.token, shipping_query_id, ok, shipping_options, error_message,
                                                base_url=self.api_url)
@@ -1044,6 +1203,26 @@ class TeleBot:
         :return:
         """
         return apihelper.delete_sticker_from_set(self.token, sticker, base_url=self.api_url)
+
+    def answer_web_app_query(self, web_app_query_id: str, result: types.InlineQueryResultBase) -> types.SentWebAppMessage:
+        """
+        Use this method to set the result of an interaction with a Web App and
+        send a corresponding message on behalf of the user to the chat from which
+        the query originated.
+        On success, a SentWebAppMessage object is returned.
+
+        Telegram Documentation: https://core.telegram.org/bots/api#answerwebappquery
+
+        :param web_app_query_id: Unique identifier for the query to be answered
+        :type web_app_query_id: :obj:`str`
+
+        :param result: A JSON-serialized object describing the message to be sent
+        :type result: :class:`telebot.types.InlineQueryResultBase`
+
+        :return: On success, a SentWebAppMessage object is returned.
+        :rtype: :class:`telebot.types.SentWebAppMessage`
+        """
+        return apihelper.answer_web_app_query(self.token, web_app_query_id, result)
 
     def register_for_reply(self, message, callback):
         """
@@ -1272,6 +1451,128 @@ class TeleBot:
 
     def add_pre_checkout_query_handler(self, handler_dict):
         self.pre_checkout_query_handlers.append(handler_dict)
+
+    def register_pre_checkout_query_handler(self, callback: Callable, func: Callable, pass_bot: Optional[bool]=False,
+                                            **kwargs):
+        """
+        Registers pre-checkout request handler.
+
+        :param callback: function to be called
+        :type callback: :obj:`function`
+
+        :param func: Function executed as a filter
+
+        :param pass_bot: True if you need to pass TeleBot instance to handler(useful for separating handlers into different files)
+        :type pass_bot: :obj:`bool`
+
+        :param kwargs: Optional keyword arguments(custom filters)
+
+        :return: decorated function
+        """
+        handler_dict = self._build_handler_dict(callback, func=func, pass_bot=pass_bot, **kwargs)
+        self.add_pre_checkout_query_handler(handler_dict)
+
+    def poll_handler(self, func, **kwargs):
+        """
+        Handles new state of a poll. Bots receive only updates about stopped polls and polls, which are sent by the bot
+        As a parameter to the decorator function, it passes :class:`telebot.types.Poll` object.
+
+        :param func: Function executed as a filter
+        :type func: :obj:`function`
+
+        :param kwargs: Optional keyword arguments(custom filters)
+        :return: None
+        """
+        def decorator(handler):
+            handler_dict = self._build_handler_dict(handler, func=func, **kwargs)
+            self.add_poll_handler(handler_dict)
+            return handler
+
+        return decorator
+
+    def add_poll_handler(self, handler_dict):
+        """
+        Adds a poll request handler
+        Note that you should use register_poll_handler to add poll_handler to the bot.
+
+        :meta private:
+
+        :param handler_dict:
+        :return:
+        """
+        self.poll_handlers.append(handler_dict)
+
+    def register_poll_handler(self, callback: Callable, func: Callable, pass_bot: Optional[bool]=False, **kwargs):
+        """
+        Registers poll handler.
+
+        :param callback: function to be called
+        :type callback: :obj:`function`
+
+        :param func: Function executed as a filter
+        :type func: :obj:`function`
+
+        :param pass_bot: True if you need to pass TeleBot instance to handler(useful for separating handlers into different files)
+        :type pass_bot: :obj:`bool`
+
+        :param kwargs: Optional keyword arguments(custom filters)
+
+        :return: None
+        """
+        handler_dict = self._build_handler_dict(callback, func=func, pass_bot=pass_bot, **kwargs)
+        self.add_poll_handler(handler_dict)
+
+    def poll_answer_handler(self, func=None, **kwargs):
+        """
+        Handles change of user's answer in a non-anonymous poll(when user changes the vote).
+        Bots receive new votes only in polls that were sent by the bot itself.
+        As a parameter to the decorator function, it passes :class:`telebot.types.PollAnswer` object.
+
+        :param func: Function executed as a filter
+        :type func: :obj:`function`
+
+        :param kwargs: Optional keyword arguments(custom filters)
+
+        :return: None
+        """
+        def decorator(handler):
+            handler_dict = self._build_handler_dict(handler, func=func, **kwargs)
+            self.add_poll_answer_handler(handler_dict)
+            return handler
+
+        return decorator
+
+    def add_poll_answer_handler(self, handler_dict):
+        """
+        Adds a poll_answer request handler.
+        Note that you should use register_poll_answer_handler to add poll_answer_handler to the bot.
+
+        :meta private:
+
+        :param handler_dict:
+        :return:
+        """
+        self.poll_answer_handlers.append(handler_dict)
+
+    def register_poll_answer_handler(self, callback: Callable, func: Callable, pass_bot: Optional[bool]=False, **kwargs):
+        """
+        Registers poll answer handler.
+
+        :param callback: function to be called
+        :type callback: :obj:`function`
+
+        :param func: Function executed as a filter
+        :type func: :obj:`function`
+
+        :param pass_bot: True if you need to pass TeleBot instance to handler(useful for separating handlers into different files)
+        :type pass_bot: :obj:`bool`
+
+        :param kwargs: Optional keyword arguments(custom filters)
+
+        :return: None
+        """
+        handler_dict = self._build_handler_dict(callback, func=func, pass_bot=pass_bot, **kwargs)
+        self.add_poll_answer_handler(handler_dict)
 
     def _test_message_handler(self, message_handler, message):
         for filter, filter_value in six.iteritems(message_handler['filters']):

@@ -757,6 +757,90 @@ def delete_sticker_from_set(token, sticker, base_url=None):
     return _make_request(token, method_url, params=payload, method='post', base_url=base_url)
 
 
+def answer_web_app_query(token, web_app_query_id, result: types.InlineQueryResultBase):
+    method_url = 'answerWebAppQuery'
+    payload = {'web_app_query_id': web_app_query_id, 'result': result.to_json()}
+    return _make_request(token, method_url, params=payload, method='post')
+
+
+# noinspection PyShadowingBuiltins
+def send_poll(
+        token, chat_id,
+        question, options,
+        is_anonymous = None, type = None, allows_multiple_answers = None, correct_option_id = None,
+        explanation = None, explanation_parse_mode=None, open_period = None, close_date = None, is_closed = None,
+        disable_notification=False, reply_to_message_id=None, allow_sending_without_reply=None,
+        reply_markup=None, timeout=None, explanation_entities=None, protect_content=None, message_thread_id=None):
+    method_url = r'sendPoll'
+    payload = {
+        'chat_id': str(chat_id),
+        'question': question,
+        'options': json.dumps(_convert_poll_options(options))}
+
+    if is_anonymous is not None:
+        payload['is_anonymous'] = is_anonymous
+    if type is not None:
+        payload['type'] = type
+    if allows_multiple_answers is not None:
+        payload['allows_multiple_answers'] = allows_multiple_answers
+    if correct_option_id is not None:
+        payload['correct_option_id'] = correct_option_id
+    if explanation is not None:
+        payload['explanation'] = explanation
+    if explanation_parse_mode is not None:
+        payload['explanation_parse_mode'] = explanation_parse_mode
+    if open_period is not None:
+        payload['open_period'] = open_period
+    if close_date is not None:
+        if isinstance(close_date, datetime):
+            payload['close_date'] = close_date.timestamp()
+        else:
+            payload['close_date'] = close_date
+    if is_closed is not None:
+        payload['is_closed'] = is_closed
+
+    if disable_notification:
+        payload['disable_notification'] = disable_notification
+    if reply_to_message_id is not None:
+        payload['reply_to_message_id'] = reply_to_message_id
+    if allow_sending_without_reply is not None:
+        payload['allow_sending_without_reply'] = allow_sending_without_reply
+    if reply_markup is not None:
+        payload['reply_markup'] = _convert_markup(reply_markup)
+    if timeout:
+        payload['timeout'] = timeout
+    if explanation_entities:
+        payload['explanation_entities'] = json.dumps(
+            types.MessageEntity.to_list_of_dicts(explanation_entities))
+    if protect_content:
+        payload['protect_content'] = protect_content
+    if message_thread_id:
+        payload['message_thread_id'] = message_thread_id
+    return _make_request(token, method_url, params=payload)
+
+
+def stop_poll(token, chat_id, message_id, reply_markup=None):
+    method_url = r'stopPoll'
+    payload = {'chat_id': str(chat_id), 'message_id': message_id}
+    if reply_markup:
+        payload['reply_markup'] = _convert_markup(reply_markup)
+    return _make_request(token, method_url, params=payload)
+
+
+def _convert_poll_options(poll_options):
+    if poll_options is None:
+        return None
+    elif len(poll_options) == 0:
+        return []
+    elif isinstance(poll_options[0], str):
+        # Compatibility mode with previous bug when only list of string was accepted as poll_options
+        return poll_options
+    elif isinstance(poll_options[0], types.PollOption):
+        return [option.text for option in poll_options]
+    else:
+        return poll_options
+
+
 def _convert_list_json_serializable(results):
     ret = ''
     for r in results:
