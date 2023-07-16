@@ -69,7 +69,9 @@ class TeleBot:
         answerInlineQuery
         """
 
-    def __init__(self, token, threaded=True, skip_pending=False, num_threads=2, api_url=None):
+    def __init__(self, token, threaded=True, skip_pending=False, num_threads=2,
+                 protect_content=None, allow_sending_without_reply=None, parse_mode=None,
+                 api_url=None):
         """
         :param token: bot API token
         :return: Telebot object.
@@ -78,6 +80,11 @@ class TeleBot:
         self.api_url = api_url
         self.update_listener = []
         self.skip_pending = skip_pending
+
+        # propertys
+        self.parse_mode = parse_mode
+        self.protect_content = protect_content
+        self.allow_sending_without_reply = allow_sending_without_reply
 
         self.__stop_polling = threading.Event()
         self.last_update_id = 0
