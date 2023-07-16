@@ -878,6 +878,7 @@ class Message(JsonDeserializable):
         self.video_chat_started = None
         self.video_chat_ended = None
         self.video_chat_participants_invited = None
+        self.web_app_data = None
         for key in options:
             setattr(self, key, options[key])
 
