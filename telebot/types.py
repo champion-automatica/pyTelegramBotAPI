@@ -1465,7 +1465,7 @@ class InlineKeyboardButton(Dictionaryable, JsonSerializable, JsonDeserializable)
         if self.callback_data:
             json_dic['callback_data'] = self.callback_data
         if self.web_app:
-            json_dict['web_app'] = self.web_app.to_dict()
+            json_dic['web_app'] = self.web_app.to_dict()
         if self.switch_inline_query is not None:
             json_dic['switch_inline_query'] = self.switch_inline_query
         if self.switch_inline_query_current_chat is not None:
@@ -1474,8 +1474,6 @@ class InlineKeyboardButton(Dictionaryable, JsonSerializable, JsonDeserializable)
             json_dic['callback_game'] = self.callback_game
         if self.pay is not None:
             json_dic['pay'] = self.pay
-        if 'web_app' in obj:
-            obj['web_app'] = WebAppInfo.de_json(obj.get('web_app'))
         return json_dic
 
 
