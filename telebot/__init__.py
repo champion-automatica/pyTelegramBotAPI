@@ -6,7 +6,8 @@ import re
 import sys
 import threading
 import time
-from typing import Optional, Union
+from typing import Optional, Union, List, Callable
+from datetime import datetime
 
 import six
 
@@ -968,7 +969,7 @@ class TeleBot:
             is_closed: Optional[bool]=None,
             disable_notification: Optional[bool]=False,
             reply_to_message_id: Optional[int]=None,
-            reply_markup: Optional[REPLY_MARKUP_TYPES]=None,
+            reply_markup=None,
             allow_sending_without_reply: Optional[bool]=None,
             timeout: Optional[int]=None,
             explanation_entities: Optional[List[types.MessageEntity]]=None,

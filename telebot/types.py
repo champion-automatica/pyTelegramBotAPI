@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Callable, List, Optional
+
 try:
     import ujson as json
 except ImportError:
